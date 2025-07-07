@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MITRE ATT&CK Framework</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0e27;
+            color: #fff;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #8892b0;
+            margin-bottom: 30px;
+        }
+        
+        .intro {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .matrix-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .attack-matrix {
+            display: table;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        .tactic-row {
+            display: table-row;
+        }
+        
+        .tactic-header {
+            display: table-cell;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            vertical-align: middle;
+        }
+        
+        .techniques-cell {
+            display: table-cell;
+            vertical-align: top;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .technique {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            border-radius: 5px;
+            padding: 8px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .technique:hover {
+            background: rgba(100, 200, 255, 0.1);
+            border-color: rgba(100, 200, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(100, 200, 255, 0.3);
+        }
+        
+        .technique-id {
+            color: #64c8ff;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .technique-name {
+            color: #ccd6f6;
+            margin-top: 3px;
+        }
+        
+        .legend {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 107, 107, 0.2);
+        }
+        
+        .legend-title {
+            font-size: 1.3em;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+        
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .legend-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .legend-item h3 {
+            color: #64c8ff;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .mitre-principles {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+        
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .principle {
+            background: rgba(100, 200, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .principle:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(100, 200, 255, 0.3);
+        }
+        
+        .principle-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .phase-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        
+        .phase-initial { background: #3498db; }
+        .phase-execution { background: #e74c3c; }
+        .phase-persistence { background: #f39c12; }
+        .phase-escalation { background: #9b59b6; }
+        .phase-defense { background: #2ecc71; }
+        .phase-discovery { background: #1abc9c; }
+        .phase-lateral { background: #e67e22; }
+        .phase-collection { background: #34495e; }
+        .phase-exfiltration { background: #c0392b; }
+        .phase-impact { background: #8e44ad; }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .attack-matrix { min-width: 800px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MITRE ATT&CK Framework</h1>
+        <p class="subtitle">Adversarial Tactics, Techniques, and Common Knowledge</p>
+        
+        <div class="intro">
+            <p><strong>MITRE ATT&CK</strong> — это глобально доступная база знаний о тактиках и техниках злоумышленников, основанная на реальных наблюдениях. Используется для разработки моделей угроз, оценки защищенности и улучшения обнаружения атак.</p>
+        </div>
+        
+        <div class="matrix-container">
+            <div class="attack-matrix">
+                <div class="tactic-row">
+                    <div class="tactic-header">Initial Access<span class="phase-indicator phase-initial">TA0001</span></div>
+                    <div class="tactic-header">Execution<span class="phase-indicator phase-execution">TA0002</span></div>
+                    <div class="tactic-header">Persistence<span class="phase-indicator phase-persistence">TA0003</span></div>
+                    <div class="tactic-header">Privilege Escalation<span class="phase-indicator phase-escalation">TA0004</span></div>
+                    <div class="tactic-header">Defense Evasion<span class="phase-indicator phase-defense">TA0005</span></div>
+                </div>
+                <div class="tactic-row">
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1566</div>
+                            <div class="technique-name">Phishing</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1190</div>
+                            <div class="technique-name">Exploit Public-Facing Application</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1133</div>
+                            <div class="technique-name">External Remote Services</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1078</div>
+                            <div class="technique-name">Valid Accounts</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1059</div>
+                            <div class="technique-name">Command and Scripting Interpreter</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1053</div>
+                            <div class="technique-name">Scheduled Task/Job</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1204</div>
+                            <div class="technique-name">User Execution</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1106</div>
+                            <div class="technique-name">Native API</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1543</div>
+                            <div class="technique-name">Create or Modify System Process</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1547</div>
+                            <div class="technique-name">Boot or Logon Autostart Execution</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1098</div>
+                            <div class="technique-name">Account Manipulation</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1505</div>
+                            <div class="technique-name">Server Software Component</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1068</div>
+                            <div class="technique-name">Exploitation for Privilege Escalation</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1055</div>
+                            <div class="technique-name">Process Injection</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1053</div>
+                            <div class="technique-name">Scheduled Task/Job</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1078</div>
+                            <div class="technique-name">Valid Accounts</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1070</div>
+                            <div class="technique-name">Indicator Removal</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1036</div>
+                            <div class="technique-name">Masquerading</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1027</div>
+                            <div class="technique-name">Obfuscated Files or Information</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1562</div>
+                            <div class="technique-name">Impair Defenses</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tactic-row">
+                    <div class="tactic-header">Credential Access<span class="phase-indicator phase-discovery">TA0006</span></div>
+                    <div class="tactic-header">Discovery<span class="phase-indicator phase-discovery">TA0007</span></div>
+                    <div class="tactic-header">Lateral Movement<span class="phase-indicator phase-lateral">TA0008</span></div>
+                    <div class="tactic-header">Collection<span class="phase-indicator phase-collection">TA0009</span></div>
+                    <div class="tactic-header">Exfiltration<span class="phase-indicator phase-exfiltration">TA0010</span></div>
+                </div>
+                <div class="tactic-row">
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1110</div>
+                            <div class="technique-name">Brute Force</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1003</div>
+                            <div class="technique-name">OS Credential Dumping</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1081</div>
+                            <div class="technique-name">Credentials in Files</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1040</div>
+                            <div class="technique-name">Network Sniffing</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1057</div>
+                            <div class="technique-name">Process Discovery</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1083</div>
+                            <div class="technique-name">File and Directory Discovery</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1018</div>
+                            <div class="technique-name">Remote System Discovery</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1069</div>
+                            <div class="technique-name">Permission Groups Discovery</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1021</div>
+                            <div class="technique-name">Remote Services</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1080</div>
+                            <div class="technique-name">Taint Shared Content</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1550</div>
+                            <div class="technique-name">Use Alternate Authentication Material</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1534</div>
+                            <div class="technique-name">Internal Spearphishing</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1005</div>
+                            <div class="technique-name">Data from Local System</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1039</div>
+                            <div class="technique-name">Data from Network Shared Drive</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1074</div>
+                            <div class="technique-name">Data Staged</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1560</div>
+                            <div class="technique-name">Archive Collected Data</div>
+                        </div>
+                    </div>
+                    <div class="techniques-cell">
+                        <div class="technique">
+                            <div class="technique-id">T1041</div>
+                            <div class="technique-name">Exfiltration Over C2 Channel</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1048</div>
+                            <div class="technique-name">Exfiltration Over Alternative Protocol</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1567</div>
+                            <div class="technique-name">Exfiltration Over Web Service</div>
+                        </div>
+                        <div class="technique">
+                            <div class="technique-id">T1020</div>
+                            <div class="technique-name">Automated Exfiltration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h2 class="legend-title">Ключевые концепции MITRE ATT&CK</h2>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <h3>📋 Тактики (Tactics)</h3>
+                    <p>Представляют цели злоумышленника на каждом этапе атаки. Отвечают на вопрос "ЗАЧЕМ?" атакующий выполняет действие.</p>
+                </div>
+                <div class="legend-item">
+                    <h3>🔧 Техники (Techniques)</h3>
+                    <p>Описывают способы достижения тактических целей. Отвечают на вопрос "КАК?" злоумышленник достигает цели.</p>
+                </div>
+                <div class="legend-item">
+                    <h3>📝 Подтехники (Sub-techniques)</h3>
+                    <p>Более детальное описание техник. Например, T1566.001 - Phishing: Spearphishing Attachment.</p>
+                </div>
+                <div class="legend-item">
+                    <h3>🎯 Процедуры (Procedures)</h3>
+                    <p>Конкретные реализации техник определенными APT-группами или малварью.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mitre-principles">
+            <h2 class="legend-title">Использование MITRE ATT&CK в SOC</h2>
+            <div class="principles-grid">
+                <div class="principle">
+                    <div class="principle-icon">🔍</div>
+                    <strong>Gap Analysis</strong>
+                    <p>Определение слепых зон в мониторинге и детектировании</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-icon">📊</div>
+                    <strong>Coverage Assessment</strong>
+                    <p>Оценка покрытия техник правилами корреляции</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-icon">🎯</div>
+                    <strong>Threat Hunting</strong>
+                    <p>Проактивный поиск следов использования техник</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-icon">📈</div>
+                    <strong>Detection Engineering</strong>
+                    <p>Создание правил на основе техник ATT&CK</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-icon">🔄</div>
+                    <strong>Incident Response</strong>
+                    <p>Маппинг инцидентов на техники для понимания TTP</p>
+                </div>
+                <div class="principle">
+                    <div class="principle-icon">📝</div>
+                    <strong>Reporting</strong>
+                    <p>Стандартизированное описание угроз и инцидентов</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h2 class="legend-title">Популярные техники для мониторинга</h2>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <h3>🔴 Критичные</h3>
+                    <p><strong>T1003</strong> - OS Credential Dumping (Mimikatz)<br>
+                    <strong>T1055</strong> - Process Injection<br>
+                    <strong>T1053</strong> - Scheduled Task/Job<br>
+                    <strong>T1086</strong> - PowerShell</p>
+                </div>
+                <div class="legend-item">
+                    <h3>🟡 Важные</h3>
+                    <p><strong>T1547</strong> - Registry Run Keys<br>
+                    <strong>T1070</strong> - Indicator Removal<br>
+                    <strong>T1040</strong> - Network Sniffing<br>
+                    <strong>T1021</strong> - Remote Services</p>
+                </div>
+                <div class="legend-item">
+                    <h3>🟢 Базовые</h3>
+                    <p><strong>T1057</strong> - Process Discovery<br>
+                    <strong>T1083</strong> - File Discovery<br>
+                    <strong>T1082</strong> - System Information Discovery<br>
+                    <strong>T1016</strong> - System Network Configuration</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

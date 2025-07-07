@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Kill Chain</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #8892b0;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .kill-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .stage {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            opacity: 0;
+            animation: fadeInSlide 0.6s ease-out forwards;
+            position: relative;
+        }
+        
+        .stage:nth-child(1) { animation-delay: 0.1s; }
+        .stage:nth-child(2) { animation-delay: 0.2s; }
+        .stage:nth-child(3) { animation-delay: 0.3s; }
+        .stage:nth-child(4) { animation-delay: 0.4s; }
+        .stage:nth-child(5) { animation-delay: 0.5s; }
+        .stage:nth-child(6) { animation-delay: 0.6s; }
+        .stage:nth-child(7) { animation-delay: 0.7s; }
+        
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .stage-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stage:not(:last-child) .stage-number::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, #00d4ff, transparent);
+        }
+        
+        .stage-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stage-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .stage-content:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 212, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+        
+        .stage-title {
+            font-size: 1.4em;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .stage-description {
+            color: #ccd6f6;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .stage-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .action-tag {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #64ffda;
+        }
+        
+        .defense-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .defense-title {
+            color: #ff6b6b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .defense-title::before {
+            content: '🛡️';
+            font-size: 1.2em;
+        }
+        
+        .defense-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .defense-tag {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            color: #ff8787;
+        }
+        
+        .legend {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+        
+        .legend-title {
+            font-size: 1.3em;
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+        
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .icon-attack { background: rgba(0, 212, 255, 0.3); }
+        .icon-defense { background: rgba(255, 107, 107, 0.3); }
+        
+        @media (max-width: 768px) {
+            .stage {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .stage-number::after {
+                display: none;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cyber Kill Chain</h1>
+        <p class="subtitle">Модель этапов кибератаки от Lockheed Martin</p>
+        
+        <div class="kill-chain">
+            <div class="stage">
+                <div class="stage-number">1</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Reconnaissance (Разведка)</h2>
+                    <p class="stage-description">
+                        Злоумышленник собирает информацию о цели. Это может включать сканирование публичных источников, 
+                        социальных сетей, веб-сайтов компании, DNS-записей и других открытых данных.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">OSINT</span>
+                        <span class="action-tag">Социальная инженерия</span>
+                        <span class="action-tag">Сканирование портов</span>
+                        <span class="action-tag">DNS перебор</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">Мониторинг OSINT</span>
+                            <span class="defense-tag">Ограничение публичной информации</span>
+                            <span class="defense-tag">Honeypots</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">2</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Weaponization (Вооружение)</h2>
+                    <p class="stage-description">
+                        Создание вредоносной нагрузки. Злоумышленник готовит эксплойт, трояна или другое вредоносное ПО, 
+                        часто маскируя его под легитимный файл или документ.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">Создание эксплойтов</span>
+                        <span class="action-tag">Упаковка малвари</span>
+                        <span class="action-tag">Обфускация кода</span>
+                        <span class="action-tag">Создание C2 инфраструктуры</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">Threat Intelligence</span>
+                            <span class="defense-tag">Анализ малвари</span>
+                            <span class="defense-tag">Мониторинг Dark Web</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">3</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Delivery (Доставка)</h2>
+                    <p class="stage-description">
+                        Передача вредоносной нагрузки жертве. Может осуществляться через email-вложения, 
+                        зараженные веб-сайты, USB-устройства или другие векторы атаки.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">Фишинг</span>
+                        <span class="action-tag">Watering hole</span>
+                        <span class="action-tag">USB-дропинг</span>
+                        <span class="action-tag">Supply chain атаки</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">Email Security Gateway</span>
+                            <span class="defense-tag">Web фильтрация</span>
+                            <span class="defense-tag">Обучение пользователей</span>
+                            <span class="defense-tag">USB блокировка</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">4</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Exploitation (Эксплуатация)</h2>
+                    <p class="stage-description">
+                        Запуск вредоносного кода. После доставки происходит эксплуатация уязвимости в системе, 
+                        приложении или через действия пользователя (например, открытие вложения).
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">Buffer overflow</span>
+                        <span class="action-tag">SQL injection</span>
+                        <span class="action-tag">Макросы в документах</span>
+                        <span class="action-tag">Zero-day эксплойты</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">Патч-менеджмент</span>
+                            <span class="defense-tag">EDR/XDR</span>
+                            <span class="defense-tag">Application whitelisting</span>
+                            <span class="defense-tag">Exploit prevention</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">5</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Installation (Установка)</h2>
+                    <p class="stage-description">
+                        Установка бэкдора или RAT (Remote Access Trojan) для постоянного доступа. 
+                        Малварь закрепляется в системе, обеспечивая persistence механизмы.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">Registry persistence</span>
+                        <span class="action-tag">Scheduled tasks</span>
+                        <span class="action-tag">Service installation</span>
+                        <span class="action-tag">Rootkit установка</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">HIPS</span>
+                            <span class="defense-tag">Мониторинг реестра</span>
+                            <span class="defense-tag">File Integrity Monitoring</span>
+                            <span class="defense-tag">Behavioral analysis</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">6</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Command & Control (C2)</h2>
+                    <p class="stage-description">
+                        Установление канала связи с командным сервером. Злоумышленник получает удаленный контроль 
+                        над скомпрометированной системой для передачи команд и кражи данных.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">HTTP/HTTPS beaconing</span>
+                        <span class="action-tag">DNS tunneling</span>
+                        <span class="action-tag">Tor/прокси цепочки</span>
+                        <span class="action-tag">Социальные сети как C2</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">Network monitoring</span>
+                            <span class="defense-tag">DNS фильтрация</span>
+                            <span class="defense-tag">Proxy inspection</span>
+                            <span class="defense-tag">IDS/IPS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">7</div>
+                <div class="stage-content">
+                    <h2 class="stage-title">Actions on Objectives</h2>
+                    <p class="stage-description">
+                        Достижение конечных целей атаки. Это может быть кража данных, шифрование файлов для выкупа, 
+                        разрушение систем или использование ресурсов для дальнейших атак.
+                    </p>
+                    <div class="stage-actions">
+                        <span class="action-tag">Data exfiltration</span>
+                        <span class="action-tag">Ransomware</span>
+                        <span class="action-tag">Lateral movement</span>
+                        <span class="action-tag">Разрушение данных</span>
+                    </div>
+                    <div class="defense-section">
+                        <div class="defense-title">Защитные меры</div>
+                        <div class="defense-actions">
+                            <span class="defense-tag">DLP</span>
+                            <span class="defense-tag">Backup системы</span>
+                            <span class="defense-tag">Network segmentation</span>
+                            <span class="defense-tag">Incident Response</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3 class="legend-title">Ключевые принципы Kill Chain</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-icon icon-attack"></div>
+                    <span>Чем раньше прервать цепочку, тем меньше ущерб</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon icon-defense"></div>
+                    <span>Защита должна быть на каждом этапе (Defense in Depth)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon icon-attack"></div>
+                    <span>Атакующему нужно пройти все этапы для успеха</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon icon-defense"></div>
+                    <span>Защитнику достаточно остановить атаку на любом этапе</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

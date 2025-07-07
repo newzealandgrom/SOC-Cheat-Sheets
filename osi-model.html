@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSI Model</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #3498db;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        .model-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .osi-stack {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .layer {
+            margin: 10px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            opacity: 0;
+            animation: slideInLeft 0.5s ease-out forwards;
+        }
+        
+        .layer:nth-child(1) { animation-delay: 0.1s; }
+        .layer:nth-child(2) { animation-delay: 0.15s; }
+        .layer:nth-child(3) { animation-delay: 0.2s; }
+        .layer:nth-child(4) { animation-delay: 0.25s; }
+        .layer:nth-child(5) { animation-delay: 0.3s; }
+        .layer:nth-child(6) { animation-delay: 0.35s; }
+        .layer:nth-child(7) { animation-delay: 0.4s; }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .layer-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .layer-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .layer:hover .layer-header::before {
+            left: 100%;
+        }
+        
+        .layer:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .layer-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2c3e50;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .layer-info {
+            flex: 1;
+        }
+        
+        .layer-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .layer-function {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Layer Colors */
+        .layer-7 .layer-header { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .layer-6 .layer-header { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .layer-5 .layer-header { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .layer-4 .layer-header { background: linear-gradient(135deg, #27ae60, #229954); }
+        .layer-3 .layer-header { background: linear-gradient(135deg, #16a085, #138d75); }
+        .layer-2 .layer-header { background: linear-gradient(135deg, #2980b9, #21618c); }
+        .layer-1 .layer-header { background: linear-gradient(135deg, #8e44ad, #7d3c98); }
+        
+        .layer-details {
+            display: none;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .layer.active .layer-details {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-title {
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-panel {
+            flex: 0.5;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            animation: slideInRight 0.8s ease-out 0.5s forwards;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .comparison-title {
+            font-size: 1.3em;
+            color: #3498db;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .tcp-ip-layer {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tcp-ip-layer:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .tcp-ip-name {
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .tcp-ip-maps {
+            font-size: 0.9em;
+            color: #ecf0f1;
+        }
+        
+        .mnemonics {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            text-align: center;
+        }
+        
+        .mnemonic-title {
+            font-size: 1.5em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .mnemonic-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .mnemonic-item {
+            background: rgba(52, 152, 219, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .mnemonic-phrase {
+            font-size: 1.2em;
+            color: #ecf0f1;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        .mnemonic-explain {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+        
+        .attack-scenarios {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+        
+        .attack-title {
+            font-size: 1.5em;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        
+        .attack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .attack-card {
+            background: rgba(231, 76, 60, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .attack-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .attack-layer {
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        
+        .attack-examples {
+            font-size: 0.9em;
+            color: #ecf0f1;
+        }
+        
+        .protocol-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: collapse;
+        }
+        
+        .protocol-table th,
+        .protocol-table td {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+        
+        .protocol-table th {
+            background: rgba(52, 152, 219, 0.2);
+            font-weight: bold;
+        }
+        
+        .protocol-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        @media (max-width: 968px) {
+            .model-container {
+                flex-direction: column;
+            }
+            
+            .comparison-panel {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Модель OSI</h1>
+        <p class="subtitle">Open Systems Interconnection Reference Model</p>
+        
+        <div class="model-container">
+            <div class="osi-stack">
+                <div class="layer layer-7" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">7</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Application Layer</div>
+                            <div class="layer-function">Прикладной уровень - взаимодействие с пользователем</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Предоставление сетевых сервисов приложениям</li>
+                                    <li>Идентификация и аутентификация</li>
+                                    <li>Синхронизация данных</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Протоколы</div>
+                                <ul>
+                                    <li>HTTP/HTTPS</li>
+                                    <li>FTP, SFTP</li>
+                                    <li>SMTP, POP3, IMAP</li>
+                                    <li>DNS, DHCP</li>
+                                    <li>SSH, Telnet</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Угрозы безопасности</div>
+                                <ul>
+                                    <li>SQL Injection</li>
+                                    <li>Cross-Site Scripting (XSS)</li>
+                                    <li>Buffer Overflow</li>
+                                    <li>Phishing</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <table class="protocol-table">
+                            <tr>
+                                <th>Протокол</th>
+                                <th>Порт</th>
+                                <th>Описание</th>
+                            </tr>
+                            <tr>
+                                <td>HTTP</td>
+                                <td>80</td>
+                                <td>Hypertext Transfer Protocol</td>
+                            </tr>
+                            <tr>
+                                <td>HTTPS</td>
+                                <td>443</td>
+                                <td>HTTP Secure</td>
+                            </tr>
+                            <tr>
+                                <td>FTP</td>
+                                <td>20/21</td>
+                                <td>File Transfer Protocol</td>
+                            </tr>
+                            <tr>
+                                <td>SSH</td>
+                                <td>22</td>
+                                <td>Secure Shell</td>
+                            </tr>
+                            <tr>
+                                <td>DNS</td>
+                                <td>53</td>
+                                <td>Domain Name System</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="layer layer-6" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">6</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Presentation Layer</div>
+                            <div class="layer-function">Уровень представления - форматирование данных</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Преобразование форматов данных</li>
+                                    <li>Шифрование/дешифрование</li>
+                                    <li>Сжатие/распаковка данных</li>
+                                    <li>Кодирование символов</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Стандарты</div>
+                                <ul>
+                                    <li>SSL/TLS</li>
+                                    <li>JPEG, GIF, PNG</li>
+                                    <li>MPEG, AVI</li>
+                                    <li>ASCII, EBCDIC, Unicode</li>
+                                    <li>Encryption (AES, DES)</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Безопасность</div>
+                                <ul>
+                                    <li>Слабые алгоритмы шифрования</li>
+                                    <li>Атаки на SSL/TLS</li>
+                                    <li>Утечки через метаданные</li>
+                                    <li>Compression attacks</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layer layer-5" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">5</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Session Layer</div>
+                            <div class="layer-function">Сеансовый уровень - управление сессиями</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Установление сессий</li>
+                                    <li>Поддержание сессий</li>
+                                    <li>Завершение сессий</li>
+                                    <li>Синхронизация диалога</li>
+                                    <li>Управление токенами</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Протоколы</div>
+                                <ul>
+                                    <li>NetBIOS</li>
+                                    <li>SQL</li>
+                                    <li>RPC (Remote Procedure Call)</li>
+                                    <li>NFS</li>
+                                    <li>SMB</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Уязвимости</div>
+                                <ul>
+                                    <li>Session hijacking</li>
+                                    <li>Man-in-the-middle</li>
+                                    <li>Session fixation</li>
+                                    <li>Replay attacks</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layer layer-4" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">4</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Transport Layer</div>
+                            <div class="layer-function">Транспортный уровень - надежная доставка</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Сегментация данных</li>
+                                    <li>Контроль потока</li>
+                                    <li>Контроль ошибок</li>
+                                    <li>Упорядочивание пакетов</li>
+                                    <li>Мультиплексирование</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Протоколы</div>
+                                <ul>
+                                    <li>TCP (Transmission Control Protocol)</li>
+                                    <li>UDP (User Datagram Protocol)</li>
+                                    <li>SCTP</li>
+                                    <li>SPX</li>
+                                    <li>DCCP</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Атаки</div>
+                                <ul>
+                                    <li>SYN Flood</li>
+                                    <li>TCP Reset Attack</li>
+                                    <li>Port Scanning</li>
+                                    <li>UDP Flood</li>
+                                    <li>TCP Session Hijacking</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <table class="protocol-table">
+                            <tr>
+                                <th>Характеристика</th>
+                                <th>TCP</th>
+                                <th>UDP</th>
+                            </tr>
+                            <tr>
+                                <td>Надежность</td>
+                                <td>Гарантированная доставка</td>
+                                <td>Best effort</td>
+                            </tr>
+                            <tr>
+                                <td>Соединение</td>
+                                <td>С установлением</td>
+                                <td>Без установления</td>
+                            </tr>
+                            <tr>
+                                <td>Скорость</td>
+                                <td>Медленнее</td>
+                                <td>Быстрее</td>
+                            </tr>
+                            <tr>
+                                <td>Использование</td>
+                                <td>Web, Email, FTP</td>
+                                <td>Streaming, Gaming, DNS</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="layer layer-3" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">3</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Network Layer</div>
+                            <div class="layer-function">Сетевой уровень - маршрутизация пакетов</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Логическая адресация (IP)</li>
+                                    <li>Маршрутизация пакетов</li>
+                                    <li>Определение пути</li>
+                                    <li>Фрагментация пакетов</li>
+                                    <li>QoS управление</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Протоколы</div>
+                                <ul>
+                                    <li>IPv4, IPv6</li>
+                                    <li>ICMP</li>
+                                    <li>OSPF, BGP, RIP</li>
+                                    <li>IPSec</li>
+                                    <li>EIGRP</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Угрозы</div>
+                                <ul>
+                                    <li>IP Spoofing</li>
+                                    <li>Route poisoning</li>
+                                    <li>ICMP attacks</li>
+                                    <li>Smurf attack</li>
+                                    <li>Black hole attack</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-title">📊 Устройства</div>
+                            <p>Роутеры, L3 коммутаторы, мультилейерные коммутаторы</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layer layer-2" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">2</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Data Link Layer</div>
+                            <div class="layer-function">Канальный уровень - передача между узлами</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Физическая адресация (MAC)</li>
+                                    <li>Обнаружение ошибок</li>
+                                    <li>Контроль доступа к среде</li>
+                                    <li>Формирование кадров</li>
+                                    <li>Flow control</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Протоколы</div>
+                                <ul>
+                                    <li>Ethernet (802.3)</li>
+                                    <li>Wi-Fi (802.11)</li>
+                                    <li>PPP</li>
+                                    <li>STP, RSTP</li>
+                                    <li>VLAN (802.1Q)</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Атаки</div>
+                                <ul>
+                                    <li>MAC spoofing</li>
+                                    <li>ARP poisoning</li>
+                                    <li>CAM table overflow</li>
+                                    <li>VLAN hopping</li>
+                                    <li>STP attacks</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-title">📊 Подуровни</div>
+                            <ul>
+                                <li><strong>LLC (Logical Link Control)</strong> - управление логическим каналом</li>
+                                <li><strong>MAC (Media Access Control)</strong> - управление доступом к среде</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="layer layer-1" onclick="toggleLayer(this)">
+                    <div class="layer-header">
+                        <div class="layer-number">1</div>
+                        <div class="layer-info">
+                            <div class="layer-name">Physical Layer</div>
+                            <div class="layer-function">Физический уровень - передача битов</div>
+                        </div>
+                    </div>
+                    <div class="layer-details">
+                        <div class="detail-grid">
+                            <div class="detail-card">
+                                <div class="detail-title">🎯 Функции</div>
+                                <ul>
+                                    <li>Передача битов</li>
+                                    <li>Определение напряжения</li>
+                                    <li>Синхронизация битов</li>
+                                    <li>Физическая топология</li>
+                                    <li>Модуляция сигнала</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🔧 Стандарты</div>
+                                <ul>
+                                    <li>Ethernet (10/100/1000 Base-T)</li>
+                                    <li>USB</li>
+                                    <li>Bluetooth</li>
+                                    <li>RS-232</li>
+                                    <li>Fiber optics</li>
+                                </ul>
+                            </div>
+                            <div class="detail-card">
+                                <div class="detail-title">🛡️ Угрозы</div>
+                                <ul>
+                                    <li>Wire tapping</li>
+                                    <li>Jamming</li>
+                                    <li>EMI/RFI interference</li>
+                                    <li>Physical damage</li>
+                                    <li>Power analysis</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <div class="detail-title">📊 Компоненты</div>
+                            <p>Кабели (UTP, STP, Fiber), коннекторы (RJ45), хабы, репитеры, модемы</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="comparison-panel">
+                <h2 class="comparison-title">📊 OSI vs TCP/IP</h2>
+                <div class="tcp-ip-layer">
+                    <div class="tcp-ip-name">Application Layer</div>
+                    <div class="tcp-ip-maps">↔ OSI Layers 5-7</div>
+                </div>
+                <div class="tcp-ip-layer">
+                    <div class="tcp-ip-name">Transport Layer</div>
+                    <div class="tcp-ip-maps">↔ OSI Layer 4</div>
+                </div>
+                <div class="tcp-ip-layer">
+                    <div class="tcp-ip-name">Internet Layer</div>
+                    <div class="tcp-ip-maps">↔ OSI Layer 3</div>
+                </div>
+                <div class="tcp-ip-layer">
+                    <div class="tcp-ip-name">Network Access Layer</div>
+                    <div class="tcp-ip-maps">↔ OSI Layers 1-2</div>
+                </div>
+                
+                <h3 style="color: #3498db; margin-top: 30px;">🔑 Ключевые различия</h3>
+                <ul style="font-size: 0.9em;">
+                    <li><strong>Количество уровней:</strong> OSI - 7, TCP/IP - 4</li>
+                    <li><strong>Разработка:</strong> OSI - теоретическая, TCP/IP - практическая</li>
+                    <li><strong>Гибкость:</strong> OSI - строгая, TCP/IP - гибкая</li>
+                    <li><strong>Использование:</strong> OSI - обучение, TCP/IP - реальные сети</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mnemonics">
+            <h2 class="mnemonic-title">🧠 Мнемоники для запоминания</h2>
+            <div class="mnemonic-list">
+                <div class="mnemonic-item">
+                    <div class="mnemonic-phrase">"Please Do Not Throw Sausage Pizza Away"</div>
+                    <div class="mnemonic-explain">Physical → Data Link → Network → Transport → Session → Presentation → Application</div>
+                </div>
+                <div class="mnemonic-item">
+                    <div class="mnemonic-phrase">"All People Seem To Need Data Processing"</div>
+                    <div class="mnemonic-explain">Application → Presentation → Session → Transport → Network → Data Link → Physical</div>
+                </div>
+                <div class="mnemonic-item">
+                    <div class="mnemonic-phrase">"Пожалуйста, Дайте Нам Творог, Сметану, Простоквашу, Пирог"</div>
+                    <div class="mnemonic-explain">Физический → Канальный → Сетевой → Транспортный → Сеансовый → Представления → Прикладной</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="attack-scenarios">
+            <h2 class="attack-title">🛡️ Атаки по уровням OSI</h2>
+            <div class="attack-grid">
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 7 - Application</div>
+                    <div class="attack-examples">
+                        • SQL Injection<br>
+                        • Cross-Site Scripting<br>
+                        • DDoS (HTTP Flood)<br>
+                        • Directory Traversal
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 6 - Presentation</div>
+                    <div class="attack-examples">
+                        • SSL Strip<br>
+                        • Downgrade attacks<br>
+                        • Encoding attacks<br>
+                        • Compression bombs
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 5 - Session</div>
+                    <div class="attack-examples">
+                        • Session hijacking<br>
+                        • Session fixation<br>
+                        • Man-in-the-Middle<br>
+                        • Replay attacks
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 4 - Transport</div>
+                    <div class="attack-examples">
+                        • SYN Flood<br>
+                        • UDP Flood<br>
+                        • Port scanning<br>
+                        • TCP sequence prediction
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 3 - Network</div>
+                    <div class="attack-examples">
+                        • IP Spoofing<br>
+                        • ICMP attacks<br>
+                        • Routing attacks<br>
+                        • Smurf/Fraggle
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 2 - Data Link</div>
+                    <div class="attack-examples">
+                        • ARP Poisoning<br>
+                        • MAC Flooding<br>
+                        • VLAN Hopping<br>
+                        • STP Manipulation
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-layer">Layer 1 - Physical</div>
+                    <div class="attack-examples">
+                        • Wire tapping<br>
+                        • Jamming<br>
+                        • Cable cutting<br>
+                        • Electromagnetic spying
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleLayer(layer) {
+            layer.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

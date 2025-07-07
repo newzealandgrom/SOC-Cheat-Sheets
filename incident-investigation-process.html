@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Процесс расследования инцидента</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #ffd700, #ff6b6b);
+            transform: translateX(-50%);
+        }
+        
+        .phase {
+            display: flex;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .phase:nth-child(1) { animation-delay: 0.1s; }
+        .phase:nth-child(2) { animation-delay: 0.2s; }
+        .phase:nth-child(3) { animation-delay: 0.3s; }
+        .phase:nth-child(4) { animation-delay: 0.4s; }
+        .phase:nth-child(5) { animation-delay: 0.5s; }
+        .phase:nth-child(6) { animation-delay: 0.6s; }
+        .phase:nth-child(7) { animation-delay: 0.7s; }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .phase:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .phase-content {
+            flex: 1;
+            padding: 0 40px;
+        }
+        
+        .phase-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .phase-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .phase-card:hover::before {
+            left: 100%;
+        }
+        
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .phase-number {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffd700, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            z-index: 10;
+        }
+        
+        .phase-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .phase-time {
+            font-size: 0.9em;
+            color: #ff6b6b;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        
+        .phase-description {
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .actions-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .actions-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #b0d4ff;
+        }
+        
+        .actions-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+            font-size: 1.2em;
+        }
+        
+        .tools-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tools-title {
+            font-weight: bold;
+            color: #64ffda;
+            margin-bottom: 8px;
+        }
+        
+        .tools-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tool-tag {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #64ffda;
+        }
+        
+        .incident-types {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .incident-types h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .type-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .type-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+        
+        .type-card h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .priority {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .priority-critical { background: #e74c3c; }
+        .priority-high { background: #e67e22; }
+        .priority-medium { background: #f39c12; }
+        .priority-low { background: #27ae60; }
+        
+        .metrics {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+        }
+        
+        .metrics h2 {
+            color: #64ffda;
+            margin-bottom: 20px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(100, 255, 218, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            color: #b0d4ff;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .phase {
+                flex-direction: column !important;
+            }
+            
+            .phase-number {
+                left: 30px;
+            }
+            
+            .phase-content {
+                padding: 0 0 0 80px;
+                margin-top: -30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Процесс расследования инцидента ИБ</h1>
+        
+        <div class="timeline">
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">🚨 Обнаружение и триаж</h2>
+                        <div class="phase-time">⏱️ 0-15 минут</div>
+                        <p class="phase-description">Первичная оценка события и определение, является ли оно инцидентом</p>
+                        <ul class="actions-list">
+                            <li>Получение алерта из SIEM/IDS/Антивируса</li>
+                            <li>Первичный анализ индикаторов</li>
+                            <li>Определение критичности</li>
+                            <li>Классификация типа инцидента</li>
+                            <li>Эскалация при необходимости</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">SIEM</span>
+                                <span class="tool-tag">TheHive</span>
+                                <span class="tool-tag">SOAR</span>
+                                <span class="tool-tag">Ticketing System</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">1</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">🔐 Изоляция и сдерживание</h2>
+                        <div class="phase-time">⏱️ 15-60 минут</div>
+                        <p class="phase-description">Предотвращение распространения угрозы и минимизация ущерба</p>
+                        <ul class="actions-list">
+                            <li>Изоляция зараженных хостов</li>
+                            <li>Блокировка вредоносных IP/URL</li>
+                            <li>Отключение скомпрометированных учетных записей</li>
+                            <li>Создание снимков систем для форензики</li>
+                            <li>Сохранение volatile данных</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">EDR/XDR</span>
+                                <span class="tool-tag">Firewall</span>
+                                <span class="tool-tag">AD/LDAP</span>
+                                <span class="tool-tag">Network TAP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">2</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">📊 Сбор данных</h2>
+                        <div class="phase-time">⏱️ 1-4 часа</div>
+                        <p class="phase-description">Сбор всех артефактов и улик для полного анализа инцидента</p>
+                        <ul class="actions-list">
+                            <li>Сбор логов с затронутых систем</li>
+                            <li>Дампы памяти и процессов</li>
+                            <li>Сетевые пакеты (PCAP)</li>
+                            <li>Копии вредоносных файлов</li>
+                            <li>Timeline событий</li>
+                            <li>Конфигурации систем</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">WinPMEM</span>
+                                <span class="tool-tag">Volatility</span>
+                                <span class="tool-tag">tcpdump/Wireshark</span>
+                                <span class="tool-tag">KAPE</span>
+                                <span class="tool-tag">Velociraptor</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">3</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">🔬 Анализ и расследование</h2>
+                        <div class="phase-time">⏱️ 4-24 часа</div>
+                        <p class="phase-description">Детальный анализ собранных данных для понимания полной картины атаки</p>
+                        <ul class="actions-list">
+                            <li>Анализ малвари (статический/динамический)</li>
+                            <li>Форензика памяти и дисков</li>
+                            <li>Анализ сетевого трафика</li>
+                            <li>Определение IOC и TTP</li>
+                            <li>Построение Kill Chain атаки</li>
+                            <li>Идентификация patient zero</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">IDA Pro/Ghidra</span>
+                                <span class="tool-tag">Cuckoo Sandbox</span>
+                                <span class="tool-tag">Timeline Explorer</span>
+                                <span class="tool-tag">YARA</span>
+                                <span class="tool-tag">CyberChef</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">4</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">🧹 Устранение угрозы</h2>
+                        <div class="phase-time">⏱️ 2-8 часов</div>
+                        <p class="phase-description">Полное удаление следов злоумышленника из инфраструктуры</p>
+                        <ul class="actions-list">
+                            <li>Удаление вредоносных файлов</li>
+                            <li>Очистка persistence механизмов</li>
+                            <li>Сброс скомпрометированных паролей</li>
+                            <li>Закрытие уязвимостей</li>
+                            <li>Удаление backdoors</li>
+                            <li>Проверка на латеральное движение</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">Antivirus/EDR</span>
+                                <span class="tool-tag">PowerShell</span>
+                                <span class="tool-tag">Sysinternals</span>
+                                <span class="tool-tag">GPO</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">5</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">🔄 Восстановление</h2>
+                        <div class="phase-time">⏱️ 1-4 часа</div>
+                        <p class="phase-description">Возвращение систем к нормальной работе и мониторинг</p>
+                        <ul class="actions-list">
+                            <li>Восстановление из бэкапов при необходимости</li>
+                            <li>Возврат систем в продакшн</li>
+                            <li>Усиленный мониторинг</li>
+                            <li>Проверка функциональности</li>
+                            <li>Обновление правил детектирования</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">Backup Systems</span>
+                                <span class="tool-tag">Monitoring Tools</span>
+                                <span class="tool-tag">SIEM Rules</span>
+                                <span class="tool-tag">Health Checks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">6</div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-content">
+                    <div class="phase-card">
+                        <h2 class="phase-title">📝 Lessons Learned</h2>
+                        <div class="phase-time">⏱️ После инцидента</div>
+                        <p class="phase-description">Анализ инцидента для улучшения процессов безопасности</p>
+                        <ul class="actions-list">
+                            <li>Создание детального отчета</li>
+                            <li>Root Cause Analysis (RCA)</li>
+                            <li>Обновление playbooks</li>
+                            <li>Обучение команды</li>
+                            <li>Улучшение превентивных мер</li>
+                            <li>Sharing IOCs с сообществом</li>
+                        </ul>
+                        <div class="tools-section">
+                            <div class="tools-title">🛠️ Инструменты:</div>
+                            <div class="tools-tags">
+                                <span class="tool-tag">Wiki/Confluence</span>
+                                <span class="tool-tag">MISP</span>
+                                <span class="tool-tag">Report Templates</span>
+                                <span class="tool-tag">TIP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phase-number">7</div>
+            </div>
+        </div>
+        
+        <div class="incident-types">
+            <h2>🎯 Типы инцидентов и приоритеты</h2>
+            <div class="types-grid">
+                <div class="type-card">
+                    <h3>Ransomware<span class="priority priority-critical">Critical</span></h3>
+                    <p>Шифрование данных с требованием выкупа. Требует немедленной изоляции и восстановления из бэкапов.</p>
+                </div>
+                <div class="type-card">
+                    <h3>Data Breach<span class="priority priority-critical">Critical</span></h3>
+                    <p>Утечка конфиденциальных данных. Необходим анализ объема утечки и уведомление регулятора.</p>
+                </div>
+                <div class="type-card">
+                    <h3>APT Activity<span class="priority priority-high">High</span></h3>
+                    <p>Продвинутая постоянная угроза. Требует глубокого анализа и threat hunting.</p>
+                </div>
+                <div class="type-card">
+                    <h3>Malware Infection<span class="priority priority-medium">Medium</span></h3>
+                    <p>Заражение вредоносным ПО. Изоляция, анализ и очистка системы.</p>
+                </div>
+                <div class="type-card">
+                    <h3>Phishing<span class="priority priority-medium">Medium</span></h3>
+                    <p>Фишинговая атака. Блокировка URL, проверка других жертв.</p>
+                </div>
+                <div class="type-card">
+                    <h3>DDoS<span class="priority priority-high">High</span></h3>
+                    <p>Атака на доступность. Активация DDoS-защиты, анализ паттернов.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics">
+            <h2>📊 Ключевые метрики реагирования</h2>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value">15 мин</div>
+                    <div class="metric-label">Mean Time to Detect (MTTD)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">30 мин</div>
+                    <div class="metric-label">Mean Time to Respond (MTTR)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">2 часа</div>
+                    <div class="metric-label">Mean Time to Contain (MTTC)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">24 часа</div>
+                    <div class="metric-label">Mean Time to Resolve (MTTR)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

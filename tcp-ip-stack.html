@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP/IP Stack</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .stack-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+        }
+        
+        .layer {
+            margin: 15px 0;
+            opacity: 0;
+            animation: slideIn 0.6s ease-out forwards;
+        }
+        
+        .layer:nth-child(1) { animation-delay: 0.1s; }
+        .layer:nth-child(2) { animation-delay: 0.2s; }
+        .layer:nth-child(3) { animation-delay: 0.3s; }
+        .layer:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .layer-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .layer-header:hover::before {
+            left: 100%;
+        }
+        
+        .layer-header:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .layer-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .layer-info {
+            flex: 1;
+        }
+        
+        .layer-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .layer-description {
+            color: #b0b0b0;
+            font-size: 0.95em;
+        }
+        
+        .layer-content {
+            display: none;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .layer.active .layer-content {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Layer Colors */
+        .layer-4 .layer-header { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .layer-4 .layer-number { background: #c0392b; }
+        
+        .layer-3 .layer-header { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .layer-3 .layer-number { background: #2980b9; }
+        
+        .layer-2 .layer-header { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .layer-2 .layer-number { background: #27ae60; }
+        
+        .layer-1 .layer-header { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .layer-1 .layer-number { background: #e67e22; }
+        
+        .protocols-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .protocol-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .protocol-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .protocol-name {
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+        
+        .protocol-port {
+            color: #ffd700;
+            font-size: 0.9em;
+        }
+        
+        .info-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        
+        .info-section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+        }
+        
+        .headers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .headers-table th,
+        .headers-table td {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+        
+        .headers-table th {
+            background: rgba(0, 255, 136, 0.2);
+            font-weight: bold;
+        }
+        
+        .headers-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .packet-flow {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(100, 200, 255, 0.3);
+        }
+        
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .flow-step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: #00ff88;
+        }
+        
+        .flow-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin: 0 auto 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .comparison-table th {
+            background: rgba(100, 200, 255, 0.2);
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .comparison-table td:first-child {
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .protocols-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .flow-step:not(:last-child)::after {
+                display: none;
+            }
+            
+            .flow-diagram {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Стек протоколов TCP/IP</h1>
+        
+        <div class="stack-container">
+            <div class="layer layer-4" onclick="toggleLayer(this)">
+                <div class="layer-header">
+                    <div class="layer-number">4</div>
+                    <div class="layer-info">
+                        <div class="layer-name">Application Layer (Прикладной уровень)</div>
+                        <div class="layer-description">Протоколы взаимодействия с приложениями и пользователями</div>
+                    </div>
+                </div>
+                <div class="layer-content">
+                    <div class="protocols-grid">
+                        <div class="protocol-card">
+                            <div class="protocol-name">HTTP/HTTPS</div>
+                            <div class="protocol-port">80/443</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">FTP</div>
+                            <div class="protocol-port">20/21</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">SSH</div>
+                            <div class="protocol-port">22</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">Telnet</div>
+                            <div class="protocol-port">23</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">SMTP</div>
+                            <div class="protocol-port">25</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">DNS</div>
+                            <div class="protocol-port">53</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">DHCP</div>
+                            <div class="protocol-port">67/68</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">POP3</div>
+                            <div class="protocol-port">110</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">IMAP</div>
+                            <div class="protocol-port">143</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">SNMP</div>
+                            <div class="protocol-port">161</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">RDP</div>
+                            <div class="protocol-port">3389</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">SIP</div>
+                            <div class="protocol-port">5060</div>
+                        </div>
+                    </div>
+                    <div class="info-section">
+                        <h3>🔍 Функции уровня:</h3>
+                        <ul>
+                            <li>Представление сетевых служб конечным пользователям</li>
+                            <li>Шифрование и дешифрование данных (HTTPS, SSH)</li>
+                            <li>Сжатие данных</li>
+                            <li>Управление сессиями приложений</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-3" onclick="toggleLayer(this)">
+                <div class="layer-header">
+                    <div class="layer-number">3</div>
+                    <div class="layer-info">
+                        <div class="layer-name">Transport Layer (Транспортный уровень)</div>
+                        <div class="layer-description">Надежная доставка данных между процессами</div>
+                    </div>
+                </div>
+                <div class="layer-content">
+                    <table class="comparison-table">
+                        <tr>
+                            <th>Характеристика</th>
+                            <th>TCP</th>
+                            <th>UDP</th>
+                        </tr>
+                        <tr>
+                            <td>Тип соединения</td>
+                            <td>С установлением соединения</td>
+                            <td>Без установления соединения</td>
+                        </tr>
+                        <tr>
+                            <td>Надежность</td>
+                            <td>Гарантированная доставка</td>
+                            <td>Негарантированная доставка</td>
+                        </tr>
+                        <tr>
+                            <td>Порядок пакетов</td>
+                            <td>Сохраняется</td>
+                            <td>Может нарушаться</td>
+                        </tr>
+                        <tr>
+                            <td>Скорость</td>
+                            <td>Медленнее</td>
+                            <td>Быстрее</td>
+                        </tr>
+                        <tr>
+                            <td>Заголовок</td>
+                            <td>20 байт</td>
+                            <td>8 байт</td>
+                        </tr>
+                        <tr>
+                            <td>Применение</td>
+                            <td>HTTP, FTP, SMTP, SSH</td>
+                            <td>DNS, DHCP, VoIP, Gaming</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="info-section">
+                        <h3>🤝 TCP Three-Way Handshake:</h3>
+                        <div class="flow-diagram">
+                            <div class="flow-step">
+                                <div class="flow-icon">1</div>
+                                <div>SYN →</div>
+                                <small>seq=x</small>
+                            </div>
+                            <div class="flow-step">
+                                <div class="flow-icon">2</div>
+                                <div>← SYN-ACK</div>
+                                <small>seq=y, ack=x+1</small>
+                            </div>
+                            <div class="flow-step">
+                                <div class="flow-icon">3</div>
+                                <div>ACK →</div>
+                                <small>seq=x+1, ack=y+1</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>📊 Структура TCP заголовка:</h3>
+                        <table class="headers-table">
+                            <tr>
+                                <th>Поле</th>
+                                <th>Размер (бит)</th>
+                                <th>Описание</th>
+                            </tr>
+                            <tr>
+                                <td>Source Port</td>
+                                <td>16</td>
+                                <td>Порт отправителя</td>
+                            </tr>
+                            <tr>
+                                <td>Destination Port</td>
+                                <td>16</td>
+                                <td>Порт получателя</td>
+                            </tr>
+                            <tr>
+                                <td>Sequence Number</td>
+                                <td>32</td>
+                                <td>Порядковый номер</td>
+                            </tr>
+                            <tr>
+                                <td>Acknowledgment Number</td>
+                                <td>32</td>
+                                <td>Номер подтверждения</td>
+                            </tr>
+                            <tr>
+                                <td>Flags</td>
+                                <td>9</td>
+                                <td>URG, ACK, PSH, RST, SYN, FIN</td>
+                            </tr>
+                            <tr>
+                                <td>Window Size</td>
+                                <td>16</td>
+                                <td>Размер окна</td>
+                            </tr>
+                            <tr>
+                                <td>Checksum</td>
+                                <td>16</td>
+                                <td>Контрольная сумма</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-2" onclick="toggleLayer(this)">
+                <div class="layer-header">
+                    <div class="layer-number">2</div>
+                    <div class="layer-info">
+                        <div class="layer-name">Internet Layer (Сетевой уровень)</div>
+                        <div class="layer-description">Маршрутизация пакетов через сеть</div>
+                    </div>
+                </div>
+                <div class="layer-content">
+                    <div class="protocols-grid">
+                        <div class="protocol-card">
+                            <div class="protocol-name">IPv4</div>
+                            <div class="protocol-port">32 бит</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">IPv6</div>
+                            <div class="protocol-port">128 бит</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">ICMP</div>
+                            <div class="protocol-port">ping/trace</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">ARP</div>
+                            <div class="protocol-port">IP→MAC</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">RARP</div>
+                            <div class="protocol-port">MAC→IP</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">OSPF</div>
+                            <div class="protocol-port">Routing</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>📦 Структура IP заголовка (IPv4):</h3>
+                        <table class="headers-table">
+                            <tr>
+                                <th>Поле</th>
+                                <th>Размер (бит)</th>
+                                <th>Описание</th>
+                            </tr>
+                            <tr>
+                                <td>Version</td>
+                                <td>4</td>
+                                <td>Версия протокола (4 или 6)</td>
+                            </tr>
+                            <tr>
+                                <td>IHL</td>
+                                <td>4</td>
+                                <td>Длина заголовка</td>
+                            </tr>
+                            <tr>
+                                <td>ToS</td>
+                                <td>8</td>
+                                <td>Тип сервиса</td>
+                            </tr>
+                            <tr>
+                                <td>Total Length</td>
+                                <td>16</td>
+                                <td>Общая длина пакета</td>
+                            </tr>
+                            <tr>
+                                <td>TTL</td>
+                                <td>8</td>
+                                <td>Time to Live</td>
+                            </tr>
+                            <tr>
+                                <td>Protocol</td>
+                                <td>8</td>
+                                <td>Протокол верхнего уровня</td>
+                            </tr>
+                            <tr>
+                                <td>Source IP</td>
+                                <td>32</td>
+                                <td>IP-адрес источника</td>
+                            </tr>
+                            <tr>
+                                <td>Destination IP</td>
+                                <td>32</td>
+                                <td>IP-адрес назначения</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>🌍 Классы IP-адресов:</h3>
+                        <table class="headers-table">
+                            <tr>
+                                <th>Класс</th>
+                                <th>Диапазон</th>
+                                <th>Маска по умолчанию</th>
+                                <th>Назначение</th>
+                            </tr>
+                            <tr>
+                                <td>A</td>
+                                <td>1.0.0.0 - 126.255.255.255</td>
+                                <td>255.0.0.0 (/8)</td>
+                                <td>Крупные сети</td>
+                            </tr>
+                            <tr>
+                                <td>B</td>
+                                <td>128.0.0.0 - 191.255.255.255</td>
+                                <td>255.255.0.0 (/16)</td>
+                                <td>Средние сети</td>
+                            </tr>
+                            <tr>
+                                <td>C</td>
+                                <td>192.0.0.0 - 223.255.255.255</td>
+                                <td>255.255.255.0 (/24)</td>
+                                <td>Малые сети</td>
+                            </tr>
+                            <tr>
+                                <td>D</td>
+                                <td>224.0.0.0 - 239.255.255.255</td>
+                                <td>-</td>
+                                <td>Multicast</td>
+                            </tr>
+                            <tr>
+                                <td>E</td>
+                                <td>240.0.0.0 - 255.255.255.255</td>
+                                <td>-</td>
+                                <td>Зарезервировано</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="layer layer-1" onclick="toggleLayer(this)">
+                <div class="layer-header">
+                    <div class="layer-number">1</div>
+                    <div class="layer-info">
+                        <div class="layer-name">Network Access Layer (Канальный/Физический)</div>
+                        <div class="layer-description">Передача данных через физическую среду</div>
+                    </div>
+                </div>
+                <div class="layer-content">
+                    <div class="protocols-grid">
+                        <div class="protocol-card">
+                            <div class="protocol-name">Ethernet</div>
+                            <div class="protocol-port">802.3</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">Wi-Fi</div>
+                            <div class="protocol-port">802.11</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">PPP</div>
+                            <div class="protocol-port">Point-to-Point</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">FDDI</div>
+                            <div class="protocol-port">Fiber</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">Token Ring</div>
+                            <div class="protocol-port">802.5</div>
+                        </div>
+                        <div class="protocol-card">
+                            <div class="protocol-name">Frame Relay</div>
+                            <div class="protocol-port">WAN</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>🔌 Функции уровня:</h3>
+                        <ul>
+                            <li>Физическая адресация (MAC-адреса)</li>
+                            <li>Контроль доступа к среде передачи</li>
+                            <li>Обнаружение и коррекция ошибок</li>
+                            <li>Преобразование битов в электрические/оптические сигналы</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>📡 Структура Ethernet кадра:</h3>
+                        <table class="headers-table">
+                            <tr>
+                                <th>Поле</th>
+                                <th>Размер (байт)</th>
+                                <th>Описание</th>
+                            </tr>
+                            <tr>
+                                <td>Preamble</td>
+                                <td>7</td>
+                                <td>Синхронизация</td>
+                            </tr>
+                            <tr>
+                                <td>SFD</td>
+                                <td>1</td>
+                                <td>Start Frame Delimiter</td>
+                            </tr>
+                            <tr>
+                                <td>Destination MAC</td>
+                                <td>6</td>
+                                <td>MAC-адрес получателя</td>
+                            </tr>
+                            <tr>
+                                <td>Source MAC</td>
+                                <td>6</td>
+                                <td>MAC-адрес отправителя</td>
+                            </tr>
+                            <tr>
+                                <td>Type/Length</td>
+                                <td>2</td>
+                                <td>Тип протокола или длина</td>
+                            </tr>
+                            <tr>
+                                <td>Data</td>
+                                <td>46-1500</td>
+                                <td>Полезная нагрузка</td>
+                            </tr>
+                            <tr>
+                                <td>FCS</td>
+                                <td>4</td>
+                                <td>Frame Check Sequence</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="packet-flow">
+            <h2>📨 Инкапсуляция данных</h2>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-icon">📝</div>
+                    <div>Data</div>
+                    <small>Application Layer</small>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">📦</div>
+                    <div>Segment</div>
+                    <small>Transport Layer</small>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">📬</div>
+                    <div>Packet</div>
+                    <small>Internet Layer</small>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🔧</div>
+                    <div>Frame</div>
+                    <small>Network Access</small>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">⚡</div>
+                    <div>Bits</div>
+                    <small>Physical</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h3>🔒 Важные порты для SOC аналитика:</h3>
+            <table class="headers-table">
+                <tr>
+                    <th>Порт</th>
+                    <th>Протокол</th>
+                    <th>Описание</th>
+                    <th>Риски безопасности</th>
+                </tr>
+                <tr>
+                    <td>21</td>
+                    <td>FTP</td>
+                    <td>File Transfer</td>
+                    <td>Передача в открытом виде</td>
+                </tr>
+                <tr>
+                    <td>22</td>
+                    <td>SSH</td>
+                    <td>Secure Shell</td>
+                    <td>Brute-force атаки</td>
+                </tr>
+                <tr>
+                    <td>23</td>
+                    <td>Telnet</td>
+                    <td>Remote Access</td>
+                    <td>Нешифрованная передача</td>
+                </tr>
+                <tr>
+                    <td>25</td>
+                    <td>SMTP</td>
+                    <td>Email</td>
+                    <td>Spam, phishing</td>
+                </tr>
+                <tr>
+                    <td>53</td>
+                    <td>DNS</td>
+                    <td>Domain Names</td>
+                    <td>DNS tunneling, poisoning</td>
+                </tr>
+                <tr>
+                    <td>80/443</td>
+                    <td>HTTP/HTTPS</td>
+                    <td>Web</td>
+                    <td>Web-атаки, C2 каналы</td>
+                </tr>
+                <tr>
+                    <td>135-139</td>
+                    <td>NetBIOS</td>
+                    <td>Windows Shares</td>
+                    <td>SMB атаки</td>
+                </tr>
+                <tr>
+                    <td>445</td>
+                    <td>SMB</td>
+                    <td>File Sharing</td>
+                    <td>WannaCry, EternalBlue</td>
+                </tr>
+                <tr>
+                    <td>3389</td>
+                    <td>RDP</td>
+                    <td>Remote Desktop</td>
+                    <td>BlueKeep, brute-force</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        function toggleLayer(layer) {
+            layer.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
