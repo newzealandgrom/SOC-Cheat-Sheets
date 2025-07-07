@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Attack Scenarios</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 25%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff4757;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #dfe6e9;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .scenario-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            opacity: 0;
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+        
+        .scenario-card:nth-child(1) { animation-delay: 0.1s; }
+        .scenario-card:nth-child(2) { animation-delay: 0.2s; }
+        .scenario-card:nth-child(3) { animation-delay: 0.3s; }
+        .scenario-card:nth-child(4) { animation-delay: 0.4s; }
+        .scenario-card:nth-child(5) { animation-delay: 0.5s; }
+        .scenario-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 71, 87, 0.6);
+        }
+        
+        .scenario-header {
+            background: linear-gradient(135deg, #ff4757, #ff6348);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .scenario-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .scenario-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .scenario-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .scenario-type {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .scenario-body {
+            padding: 25px;
+        }
+        
+        .scenario-timeline {
+            margin-bottom: 20px;
+        }
+        
+        .timeline-title {
+            font-weight: bold;
+            color: #74b9ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .timeline-steps {
+            list-style: none;
+            padding: 0;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .timeline-steps::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #74b9ff, transparent);
+        }
+        
+        .timeline-step {
+            position: relative;
+            padding: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: -15px;
+            top: 15px;
+            width: 10px;
+            height: 10px;
+            background: #74b9ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(116, 185, 255, 0.5);
+        }
+        
+        .step-time {
+            font-size: 0.85em;
+            color: #ff6348;
+            font-weight: bold;
+        }
+        
+        .step-action {
+            color: #dfe6e9;
+            margin-top: 3px;
+        }
+        
+        .indicators-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(116, 185, 255, 0.3);
+        }
+        
+        .indicators-title {
+            font-weight: bold;
+            color: #00cec9;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .indicator-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .indicator-list li {
+            padding: 5px 0;
+            color: #b2bec3;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .indicator-list li::before {
+            content: '▸';
+            color: #00cec9;
+        }
+        
+        .detection-rules {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(253, 203, 110, 0.3);
+        }
+        
+        .detection-title {
+            font-weight: bold;
+            color: #fdcb6e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rule-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            border-left: 3px solid #fdcb6e;
+        }
+        
+        .response-actions {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 118, 117, 0.3);
+        }
+        
+        .response-title {
+            font-weight: bold;
+            color: #ff7675;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-priority {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .priority-immediate { background: #d63031; }
+        .priority-high { background: #e17055; }
+        .priority-medium { background: #fdcb6e; color: #2d3436; }
+        
+        .statistics-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+        }
+        
+        .stats-title {
+            font-size: 1.3em;
+            color: #ff4757;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ff6348;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #b2bec3;
+        }
+        
+        .attack-matrix {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            overflow-x: auto;
+        }
+        
+        .matrix-title {
+            font-size: 1.5em;
+            color: #74b9ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        .matrix-table th,
+        .matrix-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .matrix-table th {
+            background: rgba(116, 185, 255, 0.2);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        .matrix-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .severity-critical { background: #d63031; }
+        .severity-high { background: #e17055; }
+        .severity-medium { background: #fdcb6e; color: #2d3436; }
+        .severity-low { background: #00b894; }
+        
+        @media (max-width: 768px) {
+            .scenarios-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .matrix-table {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Common Attack Scenarios</h1>
+        <p class="subtitle">Типовые сценарии атак и методы их обнаружения</p>
+        
+        <div class="scenarios-grid">
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🦠</div>
+                    <div class="scenario-name">Ransomware Attack</div>
+                    <div class="scenario-type">Data Encryption & Extortion</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">Phishing email с макросом доставлен</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+5 min</div>
+                                <div class="step-action">Dropper скачивает payload</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+30 min</div>
+                                <div class="step-action">Lateral movement через SMB</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+2 hours</div>
+                                <div class="step-action">Отключение защиты и бэкапов</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+3 hours</div>
+                                <div class="step-action">Начало шифрования</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы компрометации</div>
+                        <ul class="indicator-list">
+                            <li>vssadmin.exe delete shadows /all /quiet</li>
+                            <li>bcdedit /set {default} recoveryenabled no</li>
+                            <li>Файлы с расширениями .locked, .encrypted</li>
+                            <li>Ransom note в каждой папке</li>
+                            <li>Резкий рост CPU/Disk usage</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 SIEM Detection Rules</div>
+                        <div class="rule-item">
+                            Event ID 4688 AND CommandLine CONTAINS "vssadmin" AND "delete"
+                        </div>
+                        <div class="rule-item">
+                            Process Creation: wmic.exe shadowcopy delete
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Изоляция заражённых хостов<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Отключение сетевых шар<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Проверка состояния бэкапов<span class="action-priority priority-high">High</span></li>
+                            <li>Активация DR плана<span class="action-priority priority-high">High</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🎣</div>
+                    <div class="scenario-name">Phishing Campaign</div>
+                    <div class="scenario-type">Credential Harvesting</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">Массовая рассылка фишинга</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+15 min</div>
+                                <div class="step-action">Первые клики на ссылки</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+30 min</div>
+                                <div class="step-action">Ввод credentials на фейковой странице</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1 hour</div>
+                                <div class="step-action">Попытки входа с украденными данными</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+2 hours</div>
+                                <div class="step-action">Доступ к почте и отправка от имени жертвы</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы</div>
+                        <ul class="indicator-list">
+                            <li>Массовые входящие письма с одного домена</li>
+                            <li>Typosquatting домены (microsоft.com)</li>
+                            <li>Короткие URL (bit.ly, tinyurl)</li>
+                            <li>Urgency в subject line</li>
+                            <li>Множественные failed logins</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 Detection Rules</div>
+                        <div class="rule-item">
+                            Email Gateway: FROM domain age < 7 days AND attachment.type = HTML
+                        </div>
+                        <div class="rule-item">
+                            Auth logs: Failed login > 5 in 10 minutes FROM different GeoIP
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Блокировка sender domain<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Reset паролей для affected users<span class="action-priority priority-high">High</span></li>
+                            <li>Поиск других жертв<span class="action-priority priority-high">High</span></li>
+                            <li>User awareness alert<span class="action-priority priority-medium">Medium</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🔓</div>
+                    <div class="scenario-name">Privilege Escalation</div>
+                    <div class="scenario-type">Local to Domain Admin</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">Initial foothold через RCE</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+10 min</div>
+                                <div class="step-action">Enumeration: whoami /priv</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+30 min</div>
+                                <div class="step-action">Mimikatz execution</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+45 min</div>
+                                <div class="step-action">Pass-the-hash attack</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1 hour</div>
+                                <div class="step-action">DCSync для получения krbtgt</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы</div>
+                        <ul class="indicator-list">
+                            <li>lsass.exe memory access</li>
+                            <li>Suspicious PowerShell usage</li>
+                            <li>sekurlsa::logonpasswords</li>
+                            <li>Abnormal Kerberos ticket requests</li>
+                            <li>NTDS.dit access attempts</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 Detection Rules</div>
+                        <div class="rule-item">
+                            Sysmon Event ID 10: TargetImage="lsass.exe" AND GrantedAccess="0x1010"
+                        </div>
+                        <div class="rule-item">
+                            Event ID 4662: ObjectType="DS-Replication-Get-Changes-All"
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Изоляция compromised host<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Reset krbtgt password twice<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Audit все privileged accounts<span class="action-priority priority-high">High</span></li>
+                            <li>Golden ticket hunt<span class="action-priority priority-high">High</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🌐</div>
+                    <div class="scenario-name">Web Application Attack</div>
+                    <div class="scenario-type">SQL Injection to RCE</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">Fuzzing параметров приложения</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+20 min</div>
+                                <div class="step-action">SQL injection обнаружен</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+40 min</div>
+                                <div class="step-action">Database enumeration</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1 hour</div>
+                                <div class="step-action">xp_cmdshell activation</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1.5 hours</div>
+                                <div class="step-action">Webshell upload</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы</div>
+                        <ul class="indicator-list">
+                            <li>UNION SELECT statements в логах</li>
+                            <li>sleep() или WAITFOR DELAY</li>
+                            <li>xp_cmdshell в SQL queries</li>
+                            <li>Новые файлы в web directories</li>
+                            <li>Abnormal database queries volume</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 Detection Rules</div>
+                        <div class="rule-item">
+                            WAF: SQL keywords (UNION, SELECT, xp_cmdshell) in parameters
+                        </div>
+                        <div class="rule-item">
+                            IIS Logs: cs-uri-query CONTAINS "CAST(" OR "CONVERT("
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Block attacker IP<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Review database audit logs<span class="action-priority priority-high">High</span></li>
+                            <li>Check for webshells<span class="action-priority priority-high">High</span></li>
+                            <li>Patch vulnerable application<span class="action-priority priority-medium">Medium</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">🔌</div>
+                    <div class="scenario-name">Supply Chain Attack</div>
+                    <div class="scenario-type">Third-party Compromise</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T-30 days</div>
+                                <div class="step-action">Vendor software compromised</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">Malicious update deployed</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1 hour</div>
+                                <div class="step-action">Backdoor activation</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+3 hours</div>
+                                <div class="step-action">C2 communication established</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+1 day</div>
+                                <div class="step-action">Data exfiltration begins</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы</div>
+                        <ul class="indicator-list">
+                            <li>Unexpected outbound connections</li>
+                            <li>Modified legitimate executables</li>
+                            <li>New scheduled tasks after update</li>
+                            <li>Unusual DNS queries patterns</li>
+                            <li>Certificate mismatches</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 Detection Rules</div>
+                        <div class="rule-item">
+                            Network: New outbound connection from [vendor_app].exe to unknown IP
+                        </div>
+                        <div class="rule-item">
+                            File Integrity: Hash mismatch for trusted application
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Isolate affected systems<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Block C2 communications<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Vendor notification<span class="action-priority priority-high">High</span></li>
+                            <li>Threat hunt across environment<span class="action-priority priority-high">High</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="scenario-card">
+                <div class="scenario-header">
+                    <div class="scenario-icon">💳</div>
+                    <div class="scenario-name">Data Exfiltration</div>
+                    <div class="scenario-type">Insider Threat</div>
+                </div>
+                <div class="scenario-body">
+                    <div class="scenario-timeline">
+                        <div class="timeline-title">⏱️ Attack Timeline</div>
+                        <ul class="timeline-steps">
+                            <li class="timeline-step">
+                                <div class="step-time">T-7 days</div>
+                                <div class="step-action">Unusual access patterns begin</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T-3 days</div>
+                                <div class="step-action">Large database queries</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T-1 day</div>
+                                <div class="step-action">Data staging in temp folders</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+0</div>
+                                <div class="step-action">ZIP files creation</div>
+                            </li>
+                            <li class="timeline-step">
+                                <div class="step-time">T+2 hours</div>
+                                <div class="step-action">Upload to cloud storage</div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="indicators-section">
+                        <div class="indicators-title">🔍 Индикаторы</div>
+                        <ul class="indicator-list">
+                            <li>After-hours database access</li>
+                            <li>Large SELECT * queries</li>
+                            <li>Compression tools usage</li>
+                            <li>Personal cloud storage access</li>
+                            <li>USB device connections</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="detection-rules">
+                        <div class="detection-title">📋 Detection Rules</div>
+                        <div class="rule-item">
+                            DLP: File transfer > 100MB to unapproved destination
+                        </div>
+                        <div class="rule-item">
+                            Database: SELECT queries returning > 10000 rows outside business hours
+                        </div>
+                    </div>
+                    
+                    <div class="response-actions">
+                        <div class="response-title">🚨 Response Actions</div>
+                        <ul class="indicator-list">
+                            <li>Disable user account<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Legal/HR notification<span class="action-priority priority-immediate">Immediate</span></li>
+                            <li>Preserve evidence<span class="action-priority priority-high">High</span></li>
+                            <li>Review access logs<span class="action-priority priority-high">High</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="statistics-bar">
+            <h2 class="stats-title">📊 Статистика атак 2024</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">47%</div>
+                    <div class="stat-label">Ransomware</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">31%</div>
+                    <div class="stat-label">Phishing</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$10.5M</div>
+                    <div class="stat-label">Avg. Cost</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">277 days</div>
+                    <div class="stat-label">Avg. Detection</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">82%</div>
+                    <div class="stat-label">Human Factor</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="attack-matrix">
+            <h2 class="matrix-title">🎯 Attack vs Defense Matrix</h2>
+            <table class="matrix-table">
+                <tr>
+                    <th>Attack Type</th>
+                    <th>Initial Vector</th>
+                    <th>Key Indicators</th>
+                    <th>Critical Controls</th>
+                    <th>Severity</th>
+                </tr>
+                <tr>
+                    <td>Ransomware</td>
+                    <td>Phishing, RDP</td>
+                    <td>Shadow copies deletion, encryption</td>
+                    <td>Backups, EDR, Network segmentation</td>
+                    <td><span class="severity-badge severity-critical">Critical</span></td>
+                </tr>
+                <tr>
+                    <td>APT</td>
+                    <td>Spear phishing, 0-day</td>
+                    <td>Long dwell time, custom tools</td>
+                    <td>Threat hunting, NDR, UEBA</td>
+                    <td><span class="severity-badge severity-critical">Critical</span></td>
+                </tr>
+                <tr>
+                    <td>Insider Threat</td>
+                    <td>Legitimate access</td>
+                    <td>Abnormal access patterns</td>
+                    <td>DLP, UEBA, Access control</td>
+                    <td><span class="severity-badge severity-high">High</span></td>
+                </tr>
+                <tr>
+                    <td>Web Attacks</td>
+                    <td>Public applications</td>
+                    <td>SQLi, XSS patterns</td>
+                    <td>WAF, Input validation, Patching</td>
+                    <td><span class="severity-badge severity-high">High</span></td>
+                </tr>
+                <tr>
+                    <td>BEC</td>
+                    <td>Email compromise</td>
+                    <td>Wire transfer requests</td>
+                    <td>Email security, MFA, Training</td>
+                    <td><span class="severity-badge severity-medium">Medium</span></td>
+                </tr>
+                <tr>
+                    <td>Cryptomining</td>
+                    <td>Vulnerable services</td>
+                    <td>High CPU usage</td>
+                    <td>Patch management, EDR</td>
+                    <td><span class="severity-badge severity-low">Low</span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

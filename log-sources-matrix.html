@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Sources Matrix</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #130f40 0%, #000000 50%, #130f40 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #f0b90b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(240, 185, 11, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #95a5a6;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .matrix-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            overflow-x: auto;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        .matrix-table th {
+            background: linear-gradient(135deg, #f0b90b, #f39c12);
+            color: #130f40;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .matrix-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: top;
+        }
+        
+        .matrix-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .log-source {
+            font-weight: bold;
+            color: #f0b90b;
+        }
+        
+        .use-case-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            margin: 2px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .uc-auth { background: #3498db; }
+        .uc-malware { background: #e74c3c; }
+        .uc-network { background: #2ecc71; }
+        .uc-data { background: #9b59b6; }
+        .uc-compliance { background: #f39c12; }
+        .uc-forensics { background: #1abc9c; }
+        
+        .event-examples {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #ecf0f1;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 5px;
+            margin: 2px 0;
+        }
+        
+        .retention-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid #3498db;
+        }
+        
+        .log-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .category-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(240, 185, 11, 0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .category-card:nth-child(1) { animation-delay: 0.1s; }
+        .category-card:nth-child(2) { animation-delay: 0.2s; }
+        .category-card:nth-child(3) { animation-delay: 0.3s; }
+        .category-card:nth-child(4) { animation-delay: 0.4s; }
+        .category-card:nth-child(5) { animation-delay: 0.5s; }
+        .category-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: rgba(240, 185, 11, 0.6);
+        }
+        
+        .category-title {
+            font-size: 1.3em;
+            color: #f0b90b;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .category-icon {
+            font-size: 1.5em;
+        }
+        
+        .log-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .log-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #f0b90b;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .log-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+        
+        .log-name {
+            font-weight: bold;
+            color: #f0b90b;
+            margin-bottom: 5px;
+        }
+        
+        .log-desc {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+        
+        .critical-events {
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+        
+        .critical-title {
+            font-size: 1.5em;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .event-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(231, 76, 60, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .event-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.3);
+        }
+        
+        .event-id {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 5px;
+        }
+        
+        .event-name {
+            font-weight: bold;
+            color: #ecf0f1;
+            margin-bottom: 5px;
+        }
+        
+        .event-desc {
+            font-size: 0.85em;
+            color: #95a5a6;
+        }
+        
+        .volume-estimation {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(52, 152, 219, 0.3);
+        }
+        
+        .volume-title {
+            font-size: 1.5em;
+            color: #3498db;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .volume-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        
+        .volume-bar {
+            width: 80px;
+            background: linear-gradient(to top, #3498db, #2980b9);
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .volume-bar:hover {
+            transform: scaleY(1.05);
+            box-shadow: 0 -5px 20px rgba(52, 152, 219, 0.5);
+        }
+        
+        .volume-value {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        
+        .volume-label {
+            font-size: 0.9em;
+            color: #ecf0f1;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .parsing-rules {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(240, 185, 11, 0.2);
+        }
+        
+        .rules-title {
+            font-size: 1.3em;
+            color: #f0b90b;
+            margin-bottom: 20px;
+        }
+        
+        .rule-example {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border-left: 3px solid #f0b90b;
+            overflow-x: auto;
+        }
+        
+        .rule-lang {
+            color: #f0b90b;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .integration-tips {
+            background: rgba(46, 204, 113, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .tips-title {
+            font-size: 1.3em;
+            color: #2ecc71;
+            margin-bottom: 20px;
+        }
+        
+        .tip-item {
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #2ecc71;
+            border-radius: 5px;
+        }
+        
+        .tip-item strong {
+            color: #2ecc71;
+        }
+        
+        @media (max-width: 768px) {
+            .matrix-table {
+                font-size: 0.85em;
+            }
+            
+            .volume-chart {
+                height: 200px;
+            }
+            
+            .volume-bar {
+                width: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Log Sources Matrix</h1>
+        <p class="subtitle">Comprehensive mapping of log sources to use cases and detection scenarios</p>
+        
+        <div class="matrix-container">
+            <table class="matrix-table">
+                <tr>
+                    <th>Log Source</th>
+                    <th>Key Events</th>
+                    <th>Use Cases</th>
+                    <th>Retention</th>
+                    <th>Volume/Day</th>
+                </tr>
+                <tr>
+                    <td class="log-source">Windows Security</td>
+                    <td>
+                        <div class="event-examples">4624 - Successful Logon</div>
+                        <div class="event-examples">4625 - Failed Logon</div>
+                        <div class="event-examples">4688 - Process Creation</div>
+                        <div class="event-examples">4672 - Special Privileges</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-auth">Auth</span>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-forensics">Forensics</span>
+                    </td>
+                    <td><span class="retention-badge">90 days</span></td>
+                    <td>~500MB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Sysmon</td>
+                    <td>
+                        <div class="event-examples">ID 1 - Process Create</div>
+                        <div class="event-examples">ID 3 - Network Connection</div>
+                        <div class="event-examples">ID 7 - Image Loaded</div>
+                        <div class="event-examples">ID 10 - Process Access</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-network">Network</span>
+                        <span class="use-case-tag uc-forensics">Forensics</span>
+                    </td>
+                    <td><span class="retention-badge">30 days</span></td>
+                    <td>~2GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Firewall</td>
+                    <td>
+                        <div class="event-examples">Allow/Deny Traffic</div>
+                        <div class="event-examples">NAT Translations</div>
+                        <div class="event-examples">VPN Connections</div>
+                        <div class="event-examples">IPS/IDS Alerts</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-network">Network</span>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                    </td>
+                    <td><span class="retention-badge">60 days</span></td>
+                    <td>~5GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Proxy/Web Gateway</td>
+                    <td>
+                        <div class="event-examples">URL Access</div>
+                        <div class="event-examples">File Downloads</div>
+                        <div class="event-examples">Blocked Sites</div>
+                        <div class="event-examples">SSL Inspection</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-compliance">Compliance</span>
+                    </td>
+                    <td><span class="retention-badge">30 days</span></td>
+                    <td>~10GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Active Directory</td>
+                    <td>
+                        <div class="event-examples">4720 - User Created</div>
+                        <div class="event-examples">4728 - Member Added to Group</div>
+                        <div class="event-examples">4732 - Admin Group Change</div>
+                        <div class="event-examples">4768 - Kerberos TGT</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-auth">Auth</span>
+                        <span class="use-case-tag uc-compliance">Compliance</span>
+                        <span class="use-case-tag uc-forensics">Forensics</span>
+                    </td>
+                    <td><span class="retention-badge">180 days</span></td>
+                    <td>~200MB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Email Security</td>
+                    <td>
+                        <div class="event-examples">Spam Detection</div>
+                        <div class="event-examples">Phishing Attempts</div>
+                        <div class="event-examples">Malware in Attachments</div>
+                        <div class="event-examples">DLP Violations</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                        <span class="use-case-tag uc-compliance">Compliance</span>
+                    </td>
+                    <td><span class="retention-badge">90 days</span></td>
+                    <td>~1GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">DNS</td>
+                    <td>
+                        <div class="event-examples">Query/Response</div>
+                        <div class="event-examples">NXDOMAIN</div>
+                        <div class="event-examples">Zone Transfers</div>
+                        <div class="event-examples">Cache Poisoning</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-network">Network</span>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                    </td>
+                    <td><span class="retention-badge">14 days</span></td>
+                    <td>~20GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">EDR/XDR</td>
+                    <td>
+                        <div class="event-examples">Process Behavior</div>
+                        <div class="event-examples">File Modifications</div>
+                        <div class="event-examples">Registry Changes</div>
+                        <div class="event-examples">Network Activity</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-malware">Malware</span>
+                        <span class="use-case-tag uc-forensics">Forensics</span>
+                        <span class="use-case-tag uc-network">Network</span>
+                    </td>
+                    <td><span class="retention-badge">60 days</span></td>
+                    <td>~3GB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Cloud (AWS/Azure)</td>
+                    <td>
+                        <div class="event-examples">CloudTrail/Activity Log</div>
+                        <div class="event-examples">S3/Blob Access</div>
+                        <div class="event-examples">IAM Changes</div>
+                        <div class="event-examples">Resource Creation</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-auth">Auth</span>
+                        <span class="use-case-tag uc-compliance">Compliance</span>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                    </td>
+                    <td><span class="retention-badge">365 days</span></td>
+                    <td>~500MB</td>
+                </tr>
+                <tr>
+                    <td class="log-source">Database</td>
+                    <td>
+                        <div class="event-examples">Login Success/Failure</div>
+                        <div class="event-examples">Query Execution</div>
+                        <div class="event-examples">Schema Changes</div>
+                        <div class="event-examples">Privilege Escalation</div>
+                    </td>
+                    <td>
+                        <span class="use-case-tag uc-auth">Auth</span>
+                        <span class="use-case-tag uc-data">Data Loss</span>
+                        <span class="use-case-tag uc-compliance">Compliance</span>
+                    </td>
+                    <td><span class="retention-badge">90 days</span></td>
+                    <td>~2GB</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="log-categories">
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">🖥️</span> Operating System Logs</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">Windows Event Log</div>
+                        <div class="log-desc">Security, System, Application, Setup, Forwarded Events</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">Linux Syslog</div>
+                        <div class="log-desc">/var/log/auth.log, messages, secure, audit.log</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">macOS Unified Log</div>
+                        <div class="log-desc">system.log, install.log, security logs</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">🌐</span> Network Infrastructure</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">Firewall Logs</div>
+                        <div class="log-desc">Traffic logs, threat logs, URL filtering, WildFire</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">IDS/IPS</div>
+                        <div class="log-desc">Snort, Suricata alerts, packet captures</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">VPN Logs</div>
+                        <div class="log-desc">Connection logs, authentication, bandwidth usage</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security Tools</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">Antivirus/EDR</div>
+                        <div class="log-desc">Detection events, quarantine, behavioral analysis</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">DLP Solutions</div>
+                        <div class="log-desc">Policy violations, data movement, user activity</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">CASB</div>
+                        <div class="log-desc">Cloud app usage, shadow IT, risk scores</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">📱</span> Application Logs</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">Web Server</div>
+                        <div class="log-desc">Access logs, error logs, SSL logs</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">Database</div>
+                        <div class="log-desc">Query logs, error logs, audit logs</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">Application</div>
+                        <div class="log-desc">Custom app logs, API logs, transaction logs</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">☁️</span> Cloud Services</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">AWS CloudTrail</div>
+                        <div class="log-desc">API calls, resource changes, IAM activity</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">Azure Activity Log</div>
+                        <div class="log-desc">Resource operations, service health, autoscale</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">GCP Cloud Logging</div>
+                        <div class="log-desc">Admin activity, data access, system events</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="category-card">
+                <h3 class="category-title"><span class="category-icon">👤</span> Identity & Access</h3>
+                <ul class="log-list">
+                    <li class="log-item">
+                        <div class="log-name">Active Directory</div>
+                        <div class="log-desc">Authentication, group changes, policy modifications</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">LDAP</div>
+                        <div class="log-desc">Bind operations, searches, modifications</div>
+                    </li>
+                    <li class="log-item">
+                        <div class="log-name">SSO/SAML</div>
+                        <div class="log-desc">Federation events, token issuance, MFA</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="critical-events">
+            <h2 class="critical-title">🚨 Critical Windows Event IDs</h2>
+            <div class="events-grid">
+                <div class="event-card">
+                    <div class="event-id">4624</div>
+                    <div class="event-name">Successful Logon</div>
+                    <div class="event-desc">Track all authentication especially Type 3 (network) and Type 10 (RDP)</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4625</div>
+                    <div class="event-name">Failed Logon</div>
+                    <div class="event-desc">Brute force detection, password spraying</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4688</div>
+                    <div class="event-name">Process Creation</div>
+                    <div class="event-desc">Track process execution with command line</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4648</div>
+                    <div class="event-name">Explicit Credentials</div>
+                    <div class="event-desc">RunAs usage, lateral movement</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4672</div>
+                    <div class="event-name">Special Privileges</div>
+                    <div class="event-desc">Admin logons, privilege use</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4720</div>
+                    <div class="event-name">User Created</div>
+                    <div class="event-desc">New account creation</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">4732</div>
+                    <div class="event-name">Added to Admins</div>
+                    <div class="event-desc">Privilege escalation</div>
+                </div>
+                <div class="event-card">
+                    <div class="event-id">7045</div>
+                    <div class="event-name">Service Installed</div>
+                    <div class="event-desc">Persistence mechanism</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="volume-estimation">
+            <h2 class="volume-title">📈 Daily Log Volume Estimation (1000 endpoints)</h2>
+            <div class="volume-chart">
+                <div class="volume-bar" style="height: 90%;">
+                    <div class="volume-value">20 GB</div>
+                </div>
+                <div class="volume-bar" style="height: 50%;">
+                    <div class="volume-value">10 GB</div>
+                </div>
+                <div class="volume-bar" style="height: 25%;">
+                    <div class="volume-value">5 GB</div>
+                </div>
+                <div class="volume-bar" style="height: 15%;">
+                    <div class="volume-value">3 GB</div>
+                </div>
+                <div class="volume-bar" style="height: 10%;">
+                    <div class="volume-value">2 GB</div>
+                </div>
+                <div class="volume-bar" style="height: 5%;">
+                    <div class="volume-value">1 GB</div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div class="volume-label">DNS</div>
+                <div class="volume-label">Proxy</div>
+                <div class="volume-label">Firewall</div>
+                <div class="volume-label">EDR</div>
+                <div class="volume-label">Sysmon</div>
+                <div class="volume-label">Auth</div>
+            </div>
+        </div>
+        
+        <div class="parsing-rules">
+            <h3 class="rules-title">📝 Example Parsing Rules</h3>
+            
+            <div class="rule-example">
+                <div class="rule-lang">Windows Security Event 4624 Parser</div>
+                <pre>^(\S+\s+\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+Microsoft-Windows-Security-Auditing.*
+EventID: 4624
+Logon Type: (\d+)
+Account Name: (\S+)
+Account Domain: (\S+)
+Logon ID: (0x[0-9A-Fa-f]+)
+Source Network Address: (\S+)</pre>
+            </div>
+            
+            <div class="rule-example">
+                <div class="rule-lang">Apache Access Log Parser</div>
+                <pre>^(\S+)\s+\S+\s+(\S+)\s+\[([^\]]+)\]\s+"(\S+)\s+([^\s]+)\s+(\S+)"\s+(\d+)\s+(\d+)\s+"([^"]+)"\s+"([^"]+)"
+Fields: src_ip, user, timestamp, method, uri, protocol, status, bytes, referrer, user_agent</pre>
+            </div>
+            
+            <div class="rule-example">
+                <div class="rule-lang">Syslog Parser</div>
+                <pre>&lt;(\d+)&gt;(\S+\s+\d+\s+\d+:\d+:\d+)\s+(\S+)\s+(\S+)\[(\d+)\]:\s+(.*)
+Fields: priority, timestamp, hostname, program, pid, message</pre>
+            </div>
+        </div>
+        
+        <div class="integration-tips">
+            <h3 class="tips-title">💡 SIEM Integration Best Practices</h3>
+            <div class="tip-item">
+                <strong>Time Sync:</strong> Ensure all log sources use NTP for accurate correlation
+            </div>
+            <div class="tip-item">
+                <strong>Parsing:</strong> Test parsers with sample logs before production deployment
+            </div>
+            <div class="tip-item">
+                <strong>Filtering:</strong> Filter noise at source to reduce SIEM load (e.g., successful DHCP)
+            </div>
+            <div class="tip-item">
+                <strong>Enrichment:</strong> Add context like GeoIP, AD info, asset criticality
+            </div>
+            <div class="tip-item">
+                <strong>Retention:</strong> Balance compliance requirements with storage costs
+            </div>
+            <div class="tip-item">
+                <strong>Monitoring:</strong> Alert on log source failures or volume anomalies
+            </div>
+        </div>
+    </div>
+</body>
+</html>
