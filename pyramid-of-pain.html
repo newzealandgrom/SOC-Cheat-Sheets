@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyramid of Pain</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .pyramid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+        }
+        
+        .pyramid-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+        
+        .pyramid-level:nth-child(1) { animation-delay: 0.5s; }
+        .pyramid-level:nth-child(2) { animation-delay: 0.4s; }
+        .pyramid-level:nth-child(3) { animation-delay: 0.3s; }
+        .pyramid-level:nth-child(4) { animation-delay: 0.2s; }
+        .pyramid-level:nth-child(5) { animation-delay: 0.1s; }
+        .pyramid-level:nth-child(6) { animation-delay: 0s; }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .level-block {
+            padding: 20px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .level-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .pyramid-level:hover .level-block::before {
+            left: 100%;
+        }
+        
+        .pyramid-level:hover .level-block {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Level widths and colors */
+        .level-1 .level-block { 
+            width: 600px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        .level-2 .level-block { 
+            width: 500px;
+            background: linear-gradient(135deg, #e67e22, #d35400);
+        }
+        .level-3 .level-block { 
+            width: 400px;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        .level-4 .level-block { 
+            width: 320px;
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        .level-5 .level-block { 
+            width: 240px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        .level-6 .level-block { 
+            width: 160px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        }
+        
+        .level-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .level-subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .pain-indicator {
+            position: absolute;
+            right: -150px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+        
+        .details-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .detail-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-icon {
+            font-size: 1.5em;
+        }
+        
+        .level-1-detail .detail-title { color: #e74c3c; }
+        .level-2-detail .detail-title { color: #e67e22; }
+        .level-3-detail .detail-title { color: #f39c12; }
+        .level-4-detail .detail-title { color: #27ae60; }
+        .level-5-detail .detail-title { color: #3498db; }
+        .level-6-detail .detail-title { color: #ff6b6b; }
+        
+        .examples {
+            margin: 15px 0;
+        }
+        
+        .example-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid currentColor;
+            font-family: monospace;
+        }
+        
+        .detection-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            opacity: 0.8;
+        }
+        
+        .tactics-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tactics-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .tactics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tactic-card {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .tactic-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .tactic-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .tactic-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .pyramid-level .level-block {
+                width: 90% !important;
+                max-width: 300px;
+            }
+            
+            .pain-indicator {
+                display: none;
+            }
+            
+            .details-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔺 Pyramid of Pain</h1>
+        <p class="subtitle">Иерархия индикаторов компрометации по сложности изменения для злоумышленника</p>
+        
+        <div class="pyramid-container">
+            <div class="pyramid-level level-6">
+                <div class="level-block">
+                    <div class="level-name">TTP</div>
+                    <div class="level-subtitle">Tactics, Techniques & Procedures</div>
+                </div>
+                <div class="pain-indicator" style="color: #ff6b6b;">😱 Очень сложно</div>
+            </div>
+            
+            <div class="pyramid-level level-5">
+                <div class="level-block">
+                    <div class="level-name">Tools</div>
+                    <div class="level-subtitle">Инструменты атаки</div>
+                </div>
+                <div class="pain-indicator" style="color: #3498db;">😰 Сложно</div>
+            </div>
+            
+            <div class="pyramid-level level-4">
+                <div class="level-block">
+                    <div class="level-name">Network/Host Artifacts</div>
+                    <div class="level-subtitle">Сетевые артефакты</div>
+                </div>
+                <div class="pain-indicator" style="color: #27ae60;">😓 Умеренно</div>
+            </div>
+            
+            <div class="pyramid-level level-3">
+                <div class="level-block">
+                    <div class="level-name">Domain Names</div>
+                    <div class="level-subtitle">Доменные имена</div>
+                </div>
+                <div class="pain-indicator" style="color: #f39c12;">😐 Не очень сложно</div>
+            </div>
+            
+            <div class="pyramid-level level-2">
+                <div class="level-block">
+                    <div class="level-name">IP Addresses</div>
+                    <div class="level-subtitle">IP-адреса</div>
+                </div>
+                <div class="pain-indicator" style="color: #e67e22;">😊 Легко</div>
+            </div>
+            
+            <div class="pyramid-level level-1">
+                <div class="level-block">
+                    <div class="level-name">Hash Values</div>
+                    <div class="level-subtitle">Хеши файлов</div>
+                </div>
+                <div class="pain-indicator" style="color: #e74c3c;">😄 Очень легко</div>
+            </div>
+        </div>
+        
+        <div class="details-container">
+            <div class="detail-card level-1-detail">
+                <h3 class="detail-title"><span class="detail-icon">🔢</span> Hash Values</h3>
+                <div class="examples">
+                    <div class="example-item">MD5: d41d8cd98f00b204e9800998ecf8427e</div>
+                    <div class="example-item">SHA256: e3b0c44298fc1c149afbf4c8996fb924...</div>
+                    <div class="example-item">SHA1: da39a3ee5e6b4b0d3255bfef95601890afd80709</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Тривиально</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Минуты</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>Антивирусы</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Низкая</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-card level-2-detail">
+                <h3 class="detail-title"><span class="detail-icon">🌐</span> IP Addresses</h3>
+                <div class="examples">
+                    <div class="example-item">185.220.100.240 (Tor exit node)</div>
+                    <div class="example-item">45.142.214.121 (C2 server)</div>
+                    <div class="example-item">192.168.1.100 (Internal compromised)</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Легко</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Часы-дни</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>Firewall, IDS</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Средняя</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-card level-3-detail">
+                <h3 class="detail-title"><span class="detail-icon">🔗</span> Domain Names</h3>
+                <div class="examples">
+                    <div class="example-item">malicious-update.com</div>
+                    <div class="example-item">secure-bank-login[.]tk</div>
+                    <div class="example-item">microsoft-updates.net</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Умеренно</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Дни-недели</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>DNS filtering</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Средняя</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-card level-4-detail">
+                <h3 class="detail-title"><span class="detail-icon">🔍</span> Network/Host Artifacts</h3>
+                <div class="examples">
+                    <div class="example-item">Registry: HKLM\Software\Microsoft\Windows\CurrentVersion\Run</div>
+                    <div class="example-item">User-Agent: Mozilla/5.0 (Evil Bot 1.0)</div>
+                    <div class="example-item">Named Pipe: \\.\pipe\evil_pipe</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Сложно</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Недели-месяцы</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>EDR, SIEM</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Высокая</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-card level-5-detail">
+                <h3 class="detail-title"><span class="detail-icon">🛠️</span> Tools</h3>
+                <div class="examples">
+                    <div class="example-item">Cobalt Strike</div>
+                    <div class="example-item">Mimikatz</div>
+                    <div class="example-item">PowerShell Empire</div>
+                    <div class="example-item">Metasploit</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Очень сложно</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Месяцы-годы</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>Behavior analysis</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Очень высокая</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-card level-6-detail">
+                <h3 class="detail-title"><span class="detail-icon">🎯</span> TTPs</h3>
+                <div class="examples">
+                    <div class="example-item">T1055: Process Injection</div>
+                    <div class="example-item">T1003: OS Credential Dumping</div>
+                    <div class="example-item">T1053: Scheduled Task/Job</div>
+                    <div class="example-item">T1021: Remote Services</div>
+                </div>
+                <div class="detection-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Изменение:</span>
+                            <span>Крайне сложно</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Время жизни:</span>
+                            <span>Годы</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Детектирование:</span>
+                            <span>Threat hunting</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ценность:</span>
+                            <span>Критическая</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tactics-section">
+            <h2 class="tactics-title">🎯 Стратегии использования Pyramid of Pain</h2>
+            <div class="tactics-grid">
+                <div class="tactic-card">
+                    <div class="tactic-icon">📊</div>
+                    <div class="tactic-name">Приоритизация IOC</div>
+                    <div>Фокусируйтесь на индикаторах верхних уровней для эффективной защиты</div>
+                </div>
+                <div class="tactic-card">
+                    <div class="tactic-icon">🔍</div>
+                    <div class="tactic-name">Threat Hunting</div>
+                    <div>Используйте TTP и Tools для проактивного поиска угроз</div>
+                </div>
+                <div class="tactic-card">
+                    <div class="tactic-icon">📈</div>
+                    <div class="tactic-name">Maturity Assessment</div>
+                    <div>Оцените зрелость SOC по уровням обнаруживаемых индикаторов</div>
+                </div>
+                <div class="tactic-card">
+                    <div class="tactic-icon">🛡️</div>
+                    <div class="tactic-name">Defense Strategy</div>
+                    <div>Стройте защиту, затрудняя изменение индикаторов для атакующих</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
