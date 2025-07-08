@@ -25,6 +25,7 @@
 * [Жизненный цикл аналитики угроз (Threat Intelligence Lifecycle)](threat-intelligence-lifecycle.html)
 * [Процесс управления уязвимостями (Vulnerability Management Process)](vulnerability-management-process.html)
 * [Архитектура нулевого доверия (Zero Trust Architecture)](zero-trust-architecture.html)
+* [Malware Types & Analysis (Comprehensive guide to malicious software classification and detection)](malware-types-analysis.html)
 
 ## 🚀 Как использовать
 
