@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Tools & Techniques</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d2ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8dadc;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .osint-framework {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .framework-title {
+            font-size: 1.5em;
+            color: #00d2ff;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .investigation-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .flow-step:nth-child(1) { animation-delay: 0.1s; }
+        .flow-step:nth-child(2) { animation-delay: 0.2s; }
+        .flow-step:nth-child(3) { animation-delay: 0.3s; }
+        .flow-step:nth-child(4) { animation-delay: 0.4s; }
+        .flow-step:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(0, 210, 255, 0.6);
+        }
+        
+        .step-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .step-name {
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 10px;
+        }
+        
+        .step-desc {
+            font-size: 0.9em;
+            color: #a8dadc;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .tool-category {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-category:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .category-icon {
+            font-size: 2em;
+            background: rgba(0, 210, 255, 0.2);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .category-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00d2ff;
+        }
+        
+        .tools-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tool-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 3px solid #00d2ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-item:hover {
+            background: rgba(0, 0, 0, 0.5);
+            transform: translateX(5px);
+            border-left-color: #3a86ff;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 5px;
+        }
+        
+        .tool-desc {
+            font-size: 0.85em;
+            color: #a8dadc;
+            margin-bottom: 5px;
+        }
+        
+        .tool-url {
+            font-size: 0.8em;
+            color: #457b9d;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .techniques-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(58, 134, 255, 0.3);
+        }
+        
+        .techniques-title {
+            font-size: 1.5em;
+            color: #3a86ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .technique-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .technique-card {
+            background: rgba(58, 134, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(58, 134, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .technique-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(58, 134, 255, 0.3);
+        }
+        
+        .technique-name {
+            font-weight: bold;
+            color: #3a86ff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .technique-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .technique-steps li {
+            padding: 8px 0;
+            color: #a8dadc;
+            font-size: 0.9em;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .technique-steps li::before {
+            content: '→';
+            color: #3a86ff;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .investigation-types {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+        
+        .types-title {
+            font-size: 1.5em;
+            color: #00d2ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .type-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .type-card:hover {
+            transform: translateY(-3px);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.3);
+        }
+        
+        .type-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .type-name {
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 10px;
+        }
+        
+        .type-examples {
+            font-size: 0.85em;
+            color: #a8dadc;
+        }
+        
+        .search-operators {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+        
+        .operators-title {
+            font-size: 1.3em;
+            color: #00d2ff;
+            margin-bottom: 20px;
+        }
+        
+        .operators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .operator-item {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #00d2ff;
+        }
+        
+        .operator-syntax {
+            font-family: 'Courier New', monospace;
+            color: #00d2ff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .operator-desc {
+            font-size: 0.85em;
+            color: #a8dadc;
+        }
+        
+        .best-practices {
+            background: rgba(70, 211, 121, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(70, 211, 121, 0.3);
+        }
+        
+        .practices-title {
+            font-size: 1.3em;
+            color: #46d379;
+            margin-bottom: 20px;
+        }
+        
+        .practice-item {
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #46d379;
+            border-radius: 5px;
+        }
+        
+        .practice-title {
+            font-weight: bold;
+            color: #46d379;
+            margin-bottom: 5px;
+        }
+        
+        .practice-desc {
+            color: #a8dadc;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .investigation-flow {
+                flex-direction: column;
+            }
+            
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 OSINT Tools & Techniques</h1>
+        <p class="subtitle">Open Source Intelligence для SOC аналитиков</p>
+        
+        <div class="osint-framework">
+            <h2 class="framework-title">🎯 OSINT Investigation Framework</h2>
+            <div class="investigation-flow">
+                <div class="flow-step">
+                    <div class="step-icon">📋</div>
+                    <div class="step-name">Planning</div>
+                    <div class="step-desc">Определение целей и scope исследования</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-name">Discovery</div>
+                    <div class="step-desc">Поиск начальных точек входа</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">📊</div>
+                    <div class="step-name">Collection</div>
+                    <div class="step-desc">Сбор данных из различных источников</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">🔗</div>
+                    <div class="step-name">Analysis</div>
+                    <div class="step-desc">Корреляция и анализ данных</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-icon">📝</div>
+                    <div class="step-name">Reporting</div>
+                    <div class="step-desc">Документирование findings</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-grid">
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">🌐</div>
+                    <div class="category-name">Domain & IP Intelligence</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">Shodan</div>
+                        <div class="tool-desc">Поиск устройств и сервисов в интернете</div>
+                        <div class="tool-url">shodan.io</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Censys</div>
+                        <div class="tool-desc">Сканирование интернета и поиск хостов</div>
+                        <div class="tool-url">censys.io</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">VirusTotal</div>
+                        <div class="tool-desc">Анализ файлов, URL, IP, доменов</div>
+                        <div class="tool-url">virustotal.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">SecurityTrails</div>
+                        <div class="tool-desc">DNS история, subdomains, WHOIS</div>
+                        <div class="tool-url">securitytrails.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">RiskIQ PassiveTotal</div>
+                        <div class="tool-desc">Passive DNS, SSL certificates</div>
+                        <div class="tool-url">community.riskiq.com</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">📧</div>
+                    <div class="category-name">Email & People Search</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">Hunter.io</div>
+                        <div class="tool-desc">Поиск email адресов по домену</div>
+                        <div class="tool-url">hunter.io</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Have I Been Pwned</div>
+                        <div class="tool-desc">Проверка email в утечках</div>
+                        <div class="tool-url">haveibeenpwned.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Maltego</div>
+                        <div class="tool-desc">Link analysis и data mining</div>
+                        <div class="tool-url">maltego.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">SpiderFoot</div>
+                        <div class="tool-desc">Автоматизированный OSINT сбор</div>
+                        <div class="tool-url">spiderfoot.net</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">theHarvester</div>
+                        <div class="tool-desc">Email, subdomain, имена сотрудников</div>
+                        <div class="tool-url">github.com/laramies/theHarvester</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">📱</div>
+                    <div class="category-name">Social Media Intelligence</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">Social Searcher</div>
+                        <div class="tool-desc">Поиск по социальным сетям</div>
+                        <div class="tool-url">social-searcher.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">TweetDeck</div>
+                        <div class="tool-desc">Мониторинг Twitter в real-time</div>
+                        <div class="tool-url">tweetdeck.twitter.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Instagram OSINT</div>
+                        <div class="tool-desc">Анализ Instagram профилей</div>
+                        <div class="tool-url">osintcurio.us/instagram-osint</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Facebook Graph Search</div>
+                        <div class="tool-desc">Расширенный поиск Facebook</div>
+                        <div class="tool-url">graph.tips</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">LinkedIn Sales Navigator</div>
+                        <div class="tool-desc">Профессиональные профили</div>
+                        <div class="tool-url">linkedin.com/sales</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">🛡️</div>
+                    <div class="category-name">Threat Intelligence</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">AlienVault OTX</div>
+                        <div class="tool-desc">Open Threat Exchange</div>
+                        <div class="tool-url">otx.alienvault.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">MISP</div>
+                        <div class="tool-desc">Malware Information Sharing Platform</div>
+                        <div class="tool-url">misp-project.org</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">ThreatCrowd</div>
+                        <div class="tool-desc">Threat search engine</div>
+                        <div class="tool-url">threatcrowd.org</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Pulsedive</div>
+                        <div class="tool-desc">Threat intelligence platform</div>
+                        <div class="tool-url">pulsedive.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">URLhaus</div>
+                        <div class="tool-desc">Malicious URL database</div>
+                        <div class="tool-url">urlhaus.abuse.ch</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">🔧</div>
+                    <div class="category-name">Technical Tools</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">Wayback Machine</div>
+                        <div class="tool-desc">Исторические версии сайтов</div>
+                        <div class="tool-url">archive.org/web</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">DNSdumpster</div>
+                        <div class="tool-desc">DNS recon & research</div>
+                        <div class="tool-url">dnsdumpster.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Sublist3r</div>
+                        <div class="tool-desc">Subdomain enumeration</div>
+                        <div class="tool-url">github.com/aboul3la/Sublist3r</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Recon-ng</div>
+                        <div class="tool-desc">Web reconnaissance framework</div>
+                        <div class="tool-url">github.com/lanmaster53/recon-ng</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">FOCA</div>
+                        <div class="tool-desc">Metadata анализ документов</div>
+                        <div class="tool-url">github.com/ElevenPaths/FOCA</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="tool-category">
+                <div class="category-header">
+                    <div class="category-icon">🌍</div>
+                    <div class="category-name">Geolocation & Maps</div>
+                </div>
+                <ul class="tools-list">
+                    <li class="tool-item">
+                        <div class="tool-name">Google Earth Pro</div>
+                        <div class="tool-desc">Исторические спутниковые снимки</div>
+                        <div class="tool-url">google.com/earth</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Creepy</div>
+                        <div class="tool-desc">Геолокация из соцсетей</div>
+                        <div class="tool-url">github.com/ilektrojohn/creepy</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">GeoSocial Footprint</div>
+                        <div class="tool-desc">Correlation of social data</div>
+                        <div class="tool-url">geosocialfootprint.com</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">IPinfo</div>
+                        <div class="tool-desc">IP геолокация и ASN info</div>
+                        <div class="tool-url">ipinfo.io</div>
+                    </li>
+                    <li class="tool-item">
+                        <div class="tool-name">Wigle</div>
+                        <div class="tool-desc">WiFi network mapping</div>
+                        <div class="tool-url">wigle.net</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="techniques-section">
+            <h2 class="techniques-title">🎯 OSINT Techniques</h2>
+            <div class="technique-cards">
+                <div class="technique-card">
+                    <div class="technique-name">🔍 Google Dorking</div>
+                    <ul class="technique-steps">
+                        <li>site:example.com filetype:pdf</li>
+                        <li>intitle:"index of" password</li>
+                        <li>inurl:admin site:example.com</li>
+                        <li>"@example.com" -site:example.com</li>
+                        <li>cache:example.com</li>
+                    </ul>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-name">🌐 Subdomain Enumeration</div>
+                    <ul class="technique-steps">
+                        <li>Certificate Transparency logs</li>
+                        <li>DNS brute-forcing</li>
+                        <li>Search engine queries</li>
+                        <li>Wayback Machine crawling</li>
+                        <li>Virtual host scanning</li>
+                    </ul>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-name">📧 Email Intelligence</div>
+                    <ul class="technique-steps">
+                        <li>Pattern identification (firstname.lastname@)</li>
+                        <li>SMTP verification</li>
+                        <li>Social media correlation</li>
+                        <li>Breach database checking</li>
+                        <li>PGP key servers search</li>
+                    </ul>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-name">🏢 Company Research</div>
+                    <ul class="technique-steps">
+                        <li>SEC filings analysis</li>
+                        <li>Job postings (tech stack)</li>
+                        <li>Press releases</li>
+                        <li>Patent searches</li>
+                        <li>Vendor/Partner identification</li>
+                    </ul>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-name">📱 Social Media Analysis</div>
+                    <ul class="technique-steps">
+                        <li>Profile correlation across platforms</li>
+                        <li>Metadata extraction from posts</li>
+                        <li>Network mapping (connections)</li>
+                        <li>Timeline analysis</li>
+                        <li>Sentiment analysis</li>
+                    </ul>
+                </div>
+                
+                <div class="technique-card">
+                    <div class="technique-name">🔐 Infrastructure Mapping</div>
+                    <ul class="technique-steps">
+                        <li>Port scanning (Shodan/Censys)</li>
+                        <li>Technology identification</li>
+                        <li>SSL certificate analysis</li>
+                        <li>Cloud service detection</li>
+                        <li>CDN identification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="investigation-types">
+            <h2 class="types-title">🎯 Types of OSINT Investigations</h2>
+            <div class="type-grid">
+                <div class="type-card">
+                    <div class="type-icon">🎣</div>
+                    <div class="type-name">Phishing Analysis</div>
+                    <div class="type-examples">Domain age, WHOIS, similar domains, infrastructure</div>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon">🏭</div>
+                    <div class="type-name">Threat Actor Profiling</div>
+                    <div class="type-examples">TTP mapping, infrastructure tracking, attribution</div>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon">💼</div>
+                    <div class="type-name">Insider Threat</div>
+                    <div class="type-examples">Social media monitoring, dark web presence</div>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon">🔍</div>
+                    <div class="type-name">Brand Protection</div>
+                    <div class="type-examples">Typosquatting, fake accounts, impersonation</div>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon">📊</div>
+                    <div class="type-name">Supply Chain</div>
+                    <div class="type-examples">Vendor assessment, third-party risks</div>
+                </div>
+                <div class="type-card">
+                    <div class="type-icon">🌐</div>
+                    <div class="type-name">Attack Surface</div>
+                    <div class="type-examples">External assets, exposed services, vulnerabilities</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="search-operators">
+            <h3 class="operators-title">🔍 Advanced Search Operators</h3>
+            <div class="operators-grid">
+                <div class="operator-item">
+                    <div class="operator-syntax">site:linkedin.com "company name" password</div>
+                    <div class="operator-desc">Поиск утечек на конкретном сайте</div>
+                </div>
+                <div class="operator-item">
+                    <div class="operator-syntax">filetype:sql "CREATE TABLE" site:.edu</div>
+                    <div class="operator-desc">Поиск SQL дампов на образовательных сайтах</div>
+                </div>
+                <div class="operator-item">
+                    <div class="operator-syntax">intitle:"index of" inurl:backup</div>
+                    <div class="operator-desc">Открытые директории с бэкапами</div>
+                </div>
+                <div class="operator-item">
+                    <div class="operator-syntax">"Confidential" OR "Internal Use Only" filetype:xlsx</div>
+                    <div class="operator-desc">Конфиденциальные документы</div>
+                </div>
+                <div class="operator-item">
+                    <div class="operator-syntax">intext:"@gmail.com" site:pastebin.com</div>
+                    <div class="operator-desc">Email адреса в paste сервисах</div>
+                </div>
+                <div class="operator-item">
+                    <div class="operator-syntax">allinurl:admin login site:example.com</div>
+                    <div class="operator-desc">Административные панели</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="best-practices">
+            <h3 class="practices-title">💡 OSINT Best Practices</h3>
+            <div class="practice-item">
+                <div class="practice-title">🔒 OPSEC (Operational Security)</div>
+                <div class="practice-desc">Используйте VPN, отдельные аккаунты, Tor browser для анонимности</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-title">📝 Documentation</div>
+                <div class="practice-desc">Документируйте все источники, timestamps, методологию</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-title">✅ Verification</div>
+                <div class="practice-desc">Проверяйте информацию минимум из 2-3 независимых источников</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-title">⚖️ Legal Compliance</div>
+                <div class="practice-desc">Соблюдайте законы и политики компании при сборе данных</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-title">🔄 Automation</div>
+                <div class="practice-desc">Автоматизируйте рутинные задачи, но всегда проверяйте результаты</div>
+            </div>
+            <div class="practice-item">
+                <div class="practice-title">🎯 Scope Control</div>
+                <div class="practice-desc">Четко определяйте границы исследования, избегайте scope creep</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

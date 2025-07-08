@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Classification & Escalation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 50%, #1e1e2e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8b2d1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .severity-matrix {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .matrix-title {
+            font-size: 1.5em;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: auto repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .matrix-cell {
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .matrix-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.5s ease;
+        }
+        
+        .matrix-cell:hover::before {
+            left: 100%;
+        }
+        
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .axis-label {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .severity-1 { background: #27ae60; }
+        .severity-2 { background: #f39c12; }
+        .severity-3 { background: #e67e22; }
+        .severity-4 { background: #e74c3c; }
+        .severity-5 { background: #c0392b; }
+        
+        .axis-title {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+        
+        .severity-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .severity-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .severity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sev-1 { border-color: #c0392b; }
+        .sev-2 { border-color: #e74c3c; }
+        .sev-3 { border-color: #e67e22; }
+        .sev-4 { border-color: #f39c12; }
+        .sev-5 { border-color: #27ae60; }
+        
+        .severity-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .severity-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .severity-info h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        
+        .severity-time {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .severity-details {
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #64ffda;
+        }
+        
+        .escalation-flow {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .flow-title {
+            font-size: 1.5em;
+            color: #64ffda;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .escalation-chart {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .escalation-level {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid rgba(100, 255, 218, 0.3);
+        }
+        
+        .escalation-level:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .level-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .level-name {
+            font-weight: bold;
+            color: #64ffda;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .level-desc {
+            font-size: 0.9em;
+            color: #a8b2d1;
+        }
+        
+        .flow-arrow {
+            position: absolute;
+            font-size: 2em;
+            color: #64ffda;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .incident-examples {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .examples-title {
+            font-size: 1.5em;
+            color: #ffd93d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .ex-sev-1 { border-left-color: #c0392b; }
+        .ex-sev-2 { border-left-color: #e74c3c; }
+        .ex-sev-3 { border-left-color: #e67e22; }
+        .ex-sev-4 { border-left-color: #f39c12; }
+        .ex-sev-5 { border-left-color: #27ae60; }
+        
+        .example-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .example-name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .example-severity {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .example-details {
+            color: #a8b2d1;
+            margin-bottom: 15px;
+        }
+        
+        .example-actions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .action-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .action-list li {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-list li::before {
+            content: '→';
+            color: #64ffda;
+            font-weight: bold;
+        }
+        
+        .communication-matrix {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .comm-title {
+            font-size: 1.5em;
+            color: #4ecdc4;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .comm-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comm-table th,
+        .comm-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .comm-table th {
+            background: rgba(78, 205, 196, 0.2);
+            font-weight: bold;
+        }
+        
+        .comm-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .stakeholder-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            margin: 2px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            background: rgba(78, 205, 196, 0.3);
+            border: 1px solid rgba(78, 205, 196, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .matrix-grid {
+                grid-template-columns: auto repeat(3, 1fr);
+                font-size: 0.85em;
+            }
+            
+            .escalation-chart {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .example-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Incident Classification & Escalation Matrix</h1>
+        <p class="subtitle">Матрица классификации инцидентов и процедуры эскалации</p>
+        
+        <div class="severity-matrix">
+            <h2 class="matrix-title">🎯 Матрица определения критичности</h2>
+            <div class="matrix-grid">
+                <div class="matrix-cell axis-label">Impact →<br>Likelihood ↓</div>
+                <div class="matrix-cell axis-label">Minimal</div>
+                <div class="matrix-cell axis-label">Low</div>
+                <div class="matrix-cell axis-label">Medium</div>
+                <div class="matrix-cell axis-label">High</div>
+                <div class="matrix-cell axis-label">Critical</div>
+                
+                <div class="matrix-cell axis-label">Very High</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                <div class="matrix-cell severity-4">SEV 2</div>
+                <div class="matrix-cell severity-5">SEV 1</div>
+                <div class="matrix-cell severity-5">SEV 1</div>
+                
+                <div class="matrix-cell axis-label">High</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                <div class="matrix-cell severity-4">SEV 2</div>
+                <div class="matrix-cell severity-5">SEV 1</div>
+                
+                <div class="matrix-cell axis-label">Medium</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                <div class="matrix-cell severity-4">SEV 2</div>
+                
+                <div class="matrix-cell axis-label">Low</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+                
+                <div class="matrix-cell axis-label">Very Low</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-1">SEV 5</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-2">SEV 4</div>
+                <div class="matrix-cell severity-3">SEV 3</div>
+            </div>
+        </div>
+        
+        <div class="severity-levels">
+            <div class="severity-card sev-1">
+                <div class="severity-header">
+                    <div class="severity-number severity-5">1</div>
+                    <div class="severity-info">
+                        <h3>Critical</h3>
+                        <div class="severity-time">Response: 15 min | Resolution: 4 hours</div>
+                    </div>
+                </div>
+                <div class="severity-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Definition:</span> Критическое влияние на бизнес
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Examples:</span> Ransomware, полный отказ сервиса
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Escalation:</span> CEO, CISO, Crisis Team
+                    </div>
+                </div>
+            </div>
+            
+            <div class="severity-card sev-2">
+                <div class="severity-header">
+                    <div class="severity-number severity-4">2</div>
+                    <div class="severity-info">
+                        <h3>High</h3>
+                        <div class="severity-time">Response: 30 min | Resolution: 8 hours</div>
+                    </div>
+                </div>
+                <div class="severity-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Definition:</span> Значительное влияние на операции
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Examples:</span> Data breach, критичный сервер down
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Escalation:</span> IT Director, Security Manager
+                    </div>
+                </div>
+            </div>
+            
+            <div class="severity-card sev-3">
+                <div class="severity-header">
+                    <div class="severity-number severity-3">3</div>
+                    <div class="severity-info">
+                        <h3>Medium</h3>
+                        <div class="severity-time">Response: 2 hours | Resolution: 24 hours</div>
+                    </div>
+                </div>
+                <div class="severity-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Definition:</span> Умеренное влияние на подразделение
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Examples:</span> Malware на рабочей станции
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Escalation:</span> Team Lead, Duty Manager
+                    </div>
+                </div>
+            </div>
+            
+            <div class="severity-card sev-4">
+                <div class="severity-header">
+                    <div class="severity-number severity-2">4</div>
+                    <div class="severity-info">
+                        <h3>Low</h3>
+                        <div class="severity-time">Response: 4 hours | Resolution: 48 hours</div>
+                    </div>
+                </div>
+                <div class="severity-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Definition:</span> Минимальное влияние
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Examples:</span> Phishing попытка, failed login
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Escalation:</span> SOC Lead
+                    </div>
+                </div>
+            </div>
+            
+            <div class="severity-card sev-5">
+                <div class="severity-header">
+                    <div class="severity-number severity-1">5</div>
+                    <div class="severity-info">
+                        <h3>Informational</h3>
+                        <div class="severity-time">Response: 8 hours | Resolution: 5 days</div>
+                    </div>
+                </div>
+                <div class="severity-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Definition:</span> Информационное событие
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Examples:</span> Policy violation, low risk alert
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Escalation:</span> Not required
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="escalation-flow">
+            <h2 class="flow-title">📞 Escalation Chain</h2>
+            <div class="escalation-chart">
+                <div class="escalation-level">
+                    <div class="level-icon">👤</div>
+                    <div class="level-name">L1 SOC Analyst</div>
+                    <div class="level-desc">Initial triage<br>SEV 4-5</div>
+                </div>
+                <span class="flow-arrow" style="left: 22%;">→</span>
+                
+                <div class="escalation-level">
+                    <div class="level-icon">👥</div>
+                    <div class="level-name">L2 SOC Analyst</div>
+                    <div class="level-desc">Investigation<br>SEV 3-4</div>
+                </div>
+                <span class="flow-arrow" style="left: 44%;">→</span>
+                
+                <div class="escalation-level">
+                    <div class="level-icon">💼</div>
+                    <div class="level-name">SOC Manager</div>
+                    <div class="level-desc">Coordination<br>SEV 2-3</div>
+                </div>
+                <span class="flow-arrow" style="left: 66%;">→</span>
+                
+                <div class="escalation-level">
+                    <div class="level-icon">🎯</div>
+                    <div class="level-name">CISO/CTO</div>
+                    <div class="level-desc">Strategic decisions<br>SEV 1-2</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="incident-examples">
+            <h2 class="examples-title">📋 Примеры инцидентов по категориям</h2>
+            <div class="example-grid">
+                <div class="example-card ex-sev-1">
+                    <div class="example-header">
+                        <span class="example-name">🦠 Ransomware Attack</span>
+                        <span class="example-severity severity-5">SEV 1</span>
+                    </div>
+                    <div class="example-details">
+                        Multiple servers encrypted, business operations stopped
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Activate Crisis Management Team</li>
+                            <li>Isolate all affected systems</li>
+                            <li>Notify executive leadership</li>
+                            <li>Engage external IR team</li>
+                            <li>Prepare public communications</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-1">
+                    <div class="example-header">
+                        <span class="example-name">💳 PCI Data Breach</span>
+                        <span class="example-severity severity-5">SEV 1</span>
+                    </div>
+                    <div class="example-details">
+                        Confirmed exfiltration of credit card data
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Notify legal and compliance</li>
+                            <li>Contact payment card brands</li>
+                            <li>Preserve all evidence</li>
+                            <li>Begin forensic investigation</li>
+                            <li>Prepare breach notifications</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-2">
+                    <div class="example-header">
+                        <span class="example-name">🔐 Domain Admin Compromise</span>
+                        <span class="example-severity severity-4">SEV 2</span>
+                    </div>
+                    <div class="example-details">
+                        Unauthorized access to privileged account detected
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Disable compromised account</li>
+                            <li>Reset all admin passwords</li>
+                            <li>Review all recent admin activities</li>
+                            <li>Check for persistence mechanisms</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-2">
+                    <div class="example-header">
+                        <span class="example-name">🌐 DDoS Attack</span>
+                        <span class="example-severity severity-4">SEV 2</span>
+                    </div>
+                    <div class="example-details">
+                        Public-facing services experiencing significant degradation
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Enable DDoS mitigation</li>
+                            <li>Contact ISP/CDN provider</li>
+                            <li>Scale infrastructure if possible</li>
+                            <li>Monitor attack patterns</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-3">
+                    <div class="example-header">
+                        <span class="example-name">🖥️ Endpoint Malware</span>
+                        <span class="example-severity severity-3">SEV 3</span>
+                    </div>
+                    <div class="example-details">
+                        Single workstation infected with known malware
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Isolate infected endpoint</li>
+                            <li>Run full AV scan</li>
+                            <li>Check for lateral movement</li>
+                            <li>Reimage if necessary</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-3">
+                    <div class="example-header">
+                        <span class="example-name">🎣 Successful Phishing</span>
+                        <span class="example-severity severity-3">SEV 3</span>
+                    </div>
+                    <div class="example-details">
+                        User clicked link and entered credentials
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Reset user password</li>
+                            <li>Check for account compromise</li>
+                            <li>Block phishing URL</li>
+                            <li>Search for other victims</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-4">
+                    <div class="example-header">
+                        <span class="example-name">🔑 Failed Login Attempts</span>
+                        <span class="example-severity severity-2">SEV 4</span>
+                    </div>
+                    <div class="example-details">
+                        Multiple failed authentication attempts detected
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Verify source IP reputation</li>
+                            <li>Check if password spray attack</li>
+                            <li>Monitor targeted accounts</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="example-card ex-sev-5">
+                    <div class="example-header">
+                        <span class="example-name">📋 Policy Violation</span>
+                        <span class="example-severity severity-1">SEV 5</span>
+                    </div>
+                    <div class="example-details">
+                        User installed unauthorized software
+                    </div>
+                    <div class="example-actions">
+                        <ul class="action-list">
+                            <li>Document violation</li>
+                            <li>Notify user's manager</li>
+                            <li>Schedule security awareness training</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="communication-matrix">
+            <h2 class="comm-title">📢 Communication Matrix</h2>
+            <table class="comm-table">
+                <tr>
+                    <th>Severity</th>
+                    <th>Internal Stakeholders</th>
+                    <th>External Stakeholders</th>
+                    <th>Update Frequency</th>
+                </tr>
+                <tr>
+                    <td><strong>SEV 1</strong></td>
+                    <td>
+                        <span class="stakeholder-tag">CEO</span>
+                        <span class="stakeholder-tag">CISO</span>
+                        <span class="stakeholder-tag">Legal</span>
+                        <span class="stakeholder-tag">PR</span>
+                    </td>
+                    <td>
+                        <span class="stakeholder-tag">Customers</span>
+                        <span class="stakeholder-tag">Regulators</span>
+                        <span class="stakeholder-tag">Law Enforcement</span>
+                    </td>
+                    <td>Every 30 minutes</td>
+                </tr>
+                <tr>
+                    <td><strong>SEV 2</strong></td>
+                    <td>
+                        <span class="stakeholder-tag">IT Director</span>
+                        <span class="stakeholder-tag">Security Manager</span>
+                        <span class="stakeholder-tag">Affected BU</span>
+                    </td>
+                    <td>
+                        <span class="stakeholder-tag">Key Partners</span>
+                        <span class="stakeholder-tag">MSP/Vendors</span>
+                    </td>
+                    <td>Every hour</td>
+                </tr>
+                <tr>
+                    <td><strong>SEV 3</strong></td>
+                    <td>
+                        <span class="stakeholder-tag">SOC Manager</span>
+                        <span class="stakeholder-tag">IT Teams</span>
+                    </td>
+                    <td>
+                        <span class="stakeholder-tag">As needed</span>
+                    </td>
+                    <td>Every 4 hours</td>
+                </tr>
+                <tr>
+                    <td><strong>SEV 4</strong></td>
+                    <td>
+                        <span class="stakeholder-tag">SOC Team</span>
+                        <span class="stakeholder-tag">Affected Users</span>
+                    </td>
+                    <td>
+                        <span class="stakeholder-tag">None</span>
+                    </td>
+                    <td>Daily</td>
+                </tr>
+                <tr>
+                    <td><strong>SEV 5</strong></td>
+                    <td>
+                        <span class="stakeholder-tag">SOC Team</span>
+                    </td>
+                    <td>
+                        <span class="stakeholder-tag">None</span>
+                    </td>
+                    <td>Weekly report</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
