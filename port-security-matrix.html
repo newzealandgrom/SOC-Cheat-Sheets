@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port Security Matrix</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a237e 50%, #000428 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00e676;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b0bec5;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .port-categories {
+            display: grid;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .category-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .category-section:nth-child(1) { animation-delay: 0.1s; }
+        .category-section:nth-child(2) { animation-delay: 0.2s; }
+        .category-section:nth-child(3) { animation-delay: 0.3s; }
+        .category-section:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .category-icon {
+            font-size: 2.5em;
+        }
+        
+        .category-title {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .port-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .port-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .port-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .port-card:hover::before {
+            left: 100%;
+        }
+        
+        .port-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .risk-critical { border-color: #ff1744; background: rgba(255, 23, 68, 0.05); }
+        .risk-high { border-color: #ff6b6b; background: rgba(255, 107, 107, 0.05); }
+        .risk-medium { border-color: #ffa502; background: rgba(255, 165, 2, 0.05); }
+        .risk-low { border-color: #00e676; background: rgba(0, 230, 118, 0.05); }
+        
+        .port-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .port-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00e676;
+        }
+        
+        .protocol-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .service-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #64b5f6;
+        }
+        
+        .port-description {
+            color: #b0bec5;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .threats-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .threats-title {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .threat-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .threat-item {
+            padding: 8px 0;
+            color: #ffcdd2;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .threat-item::before {
+            content: '⚠️';
+            flex-shrink: 0;
+        }
+        
+        .mitigation-section {
+            margin-top: 15px;
+            background: rgba(0, 230, 118, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .mitigation-title {
+            font-weight: bold;
+            color: #00e676;
+            margin-bottom: 8px;
+        }
+        
+        .mitigation-text {
+            color: #c8e6c9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .port-scanner-warning {
+            background: rgba(255, 23, 68, 0.1);
+            border: 2px solid #ff1744;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .warning-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .warning-title {
+            font-size: 1.5em;
+            color: #ff1744;
+            margin-bottom: 10px;
+        }
+        
+        .warning-text {
+            color: #ffcdd2;
+            line-height: 1.6;
+        }
+        
+        .common-attacks {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .attacks-title {
+            font-size: 1.5em;
+            color: #ffc107;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .attacks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .attack-card {
+            background: rgba(255, 193, 7, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .attack-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.2);
+        }
+        
+        .attack-name {
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .attack-desc {
+            color: #b0bec5;
+            line-height: 1.5;
+        }
+        
+        .monitoring-tools {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.5em;
+            color: #9c27b0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tool-item {
+            background: rgba(156, 39, 176, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #9c27b0;
+            margin-bottom: 5px;
+        }
+        
+        .tool-desc {
+            font-size: 0.9em;
+            color: #b0bec5;
+        }
+        
+        @media (max-width: 768px) {
+            .port-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Port Security Matrix</h1>
+        <p class="subtitle">Матрица портов, протоколов и связанных угроз безопасности</p>
+        
+        <div class="port-scanner-warning">
+            <div class="warning-icon">🚨</div>
+            <h2 class="warning-title">Критически важные порты для мониторинга</h2>
+            <p class="warning-text">
+                Эти порты часто являются целью атак и должны находиться под постоянным контролем SOC. 
+                Любая необычная активность на этих портах требует немедленного расследования.
+            </p>
+        </div>
+        
+        <div class="port-categories">
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🔴</span>
+                    <h2 class="category-title">Critical Risk Ports</h2>
+                </div>
+                <div class="port-grid">
+                    <div class="port-card risk-critical">
+                        <div class="port-header">
+                            <span class="port-number">445</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">SMB (Server Message Block)</div>
+                        <div class="port-description">
+                            Файловый обмен Windows, печать, межпроцессное взаимодействие
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">EternalBlue (WannaCry, NotPetya)</li>
+                                <li class="threat-item">Pass-the-Hash атаки</li>
+                                <li class="threat-item">Lateral movement</li>
+                                <li class="threat-item">Ransomware распространение</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Блокировать на периметре, использовать SMB signing, отключить SMBv1, 
+                                регулярное патчирование, сегментация сети
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-critical">
+                        <div class="port-header">
+                            <span class="port-number">3389</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">RDP (Remote Desktop Protocol)</div>
+                        <div class="port-description">
+                            Удаленный рабочий стол Windows
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">BlueKeep (CVE-2019-0708)</li>
+                                <li class="threat-item">Brute-force атаки</li>
+                                <li class="threat-item">Man-in-the-middle</li>
+                                <li class="threat-item">Credential theft</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                VPN для доступа, NLA включен, сложные пароли, 
+                                2FA, ограничение по IP, RD Gateway
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-critical">
+                        <div class="port-header">
+                            <span class="port-number">22</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">SSH (Secure Shell)</div>
+                        <div class="port-description">
+                            Защищенный удаленный доступ к Unix/Linux системам
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Brute-force атаки</li>
+                                <li class="threat-item">SSH key compromise</li>
+                                <li class="threat-item">Cryptojacking</li>
+                                <li class="threat-item">Backdoor установка</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Отключить парольную аутентификацию, использовать ключи, 
+                                fail2ban, нестандартный порт, bastion hosts
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-critical">
+                        <div class="port-header">
+                            <span class="port-number">1433</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">MS SQL Server</div>
+                        <div class="port-description">
+                            База данных Microsoft SQL Server
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">SQL injection</li>
+                                <li class="threat-item">xp_cmdshell exploitation</li>
+                                <li class="threat-item">Data exfiltration</li>
+                                <li class="threat-item">Privilege escalation</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Изоляция от интернета, Windows аутентификация, 
+                                шифрование соединений, аудит запросов
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🟠</span>
+                    <h2 class="category-title">High Risk Ports</h2>
+                </div>
+                <div class="port-grid">
+                    <div class="port-card risk-high">
+                        <div class="port-header">
+                            <span class="port-number">23</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">Telnet</div>
+                        <div class="port-description">
+                            Незащищенный протокол удаленного доступа
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Передача паролей в открытом виде</li>
+                                <li class="threat-item">IoT botnet recruitment</li>
+                                <li class="threat-item">Network sniffing</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Полностью отключить, заменить на SSH, блокировать на firewall
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-high">
+                        <div class="port-header">
+                            <span class="port-number">135-139</span>
+                            <span class="protocol-badge">TCP/UDP</span>
+                        </div>
+                        <div class="service-name">NetBIOS</div>
+                        <div class="port-description">
+                            Сетевые службы Windows (имена, сессии, датаграммы)
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Null session enumeration</li>
+                                <li class="threat-item">SMB relay attacks</li>
+                                <li class="threat-item">Information disclosure</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Отключить NetBIOS over TCP/IP, блокировать на периметре
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-high">
+                        <div class="port-header">
+                            <span class="port-number">21</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">FTP</div>
+                        <div class="port-description">
+                            File Transfer Protocol - передача файлов
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Clear text credentials</li>
+                                <li class="threat-item">Anonymous access abuse</li>
+                                <li class="threat-item">FTP bounce attacks</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Использовать SFTP/FTPS, отключить анонимный доступ, chroot jail
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-high">
+                        <div class="port-header">
+                            <span class="port-number">161/162</span>
+                            <span class="protocol-badge">UDP</span>
+                        </div>
+                        <div class="service-name">SNMP</div>
+                        <div class="port-description">
+                            Simple Network Management Protocol
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Default community strings</li>
+                                <li class="threat-item">Information enumeration</li>
+                                <li class="threat-item">Configuration changes</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                SNMPv3 с шифрованием, сложные community strings, ACL
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🟡</span>
+                    <h2 class="category-title">Medium Risk Ports</h2>
+                </div>
+                <div class="port-grid">
+                    <div class="port-card risk-medium">
+                        <div class="port-header">
+                            <span class="port-number">80/443</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">HTTP/HTTPS</div>
+                        <div class="port-description">
+                            Web трафик - основа интернета
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Web application attacks</li>
+                                <li class="threat-item">C2 communication</li>
+                                <li class="threat-item">Data exfiltration</li>
+                                <li class="threat-item">Phishing delivery</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                WAF, SSL/TLS inspection, контентная фильтрация, IPS
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-medium">
+                        <div class="port-header">
+                            <span class="port-number">53</span>
+                            <span class="protocol-badge">TCP/UDP</span>
+                        </div>
+                        <div class="service-name">DNS</div>
+                        <div class="port-description">
+                            Domain Name System - разрешение имен
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">DNS tunneling</li>
+                                <li class="threat-item">Cache poisoning</li>
+                                <li class="threat-item">DDoS amplification</li>
+                                <li class="threat-item">Zone transfer</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                DNSSEC, ограничение рекурсии, мониторинг аномалий, RPZ
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-medium">
+                        <div class="port-header">
+                            <span class="port-number">25</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">SMTP</div>
+                        <div class="port-description">
+                            Simple Mail Transfer Protocol - отправка email
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Open relay abuse</li>
+                                <li class="threat-item">Spam distribution</li>
+                                <li class="threat-item">Email spoofing</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                SPF/DKIM/DMARC, закрыть open relay, rate limiting
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-medium">
+                        <div class="port-header">
+                            <span class="port-number">3306</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">MySQL</div>
+                        <div class="port-description">
+                            База данных MySQL/MariaDB
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">SQL injection</li>
+                                <li class="threat-item">Unauthorized access</li>
+                                <li class="threat-item">Data theft</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Bind на localhost, SSL соединения, сильная аутентификация
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🟢</span>
+                    <h2 class="category-title">Common Service Ports</h2>
+                </div>
+                <div class="port-grid">
+                    <div class="port-card risk-low">
+                        <div class="port-header">
+                            <span class="port-number">123</span>
+                            <span class="protocol-badge">UDP</span>
+                        </div>
+                        <div class="service-name">NTP</div>
+                        <div class="port-description">
+                            Network Time Protocol - синхронизация времени
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">DDoS amplification</li>
+                                <li class="threat-item">Time manipulation</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Ограничить monlist, использовать локальные NTP серверы
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-low">
+                        <div class="port-header">
+                            <span class="port-number">67/68</span>
+                            <span class="protocol-badge">UDP</span>
+                        </div>
+                        <div class="service-name">DHCP</div>
+                        <div class="port-description">
+                            Dynamic Host Configuration Protocol
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">DHCP starvation</li>
+                                <li class="threat-item">Rogue DHCP server</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                DHCP snooping, port security, статические привязки
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-low">
+                        <div class="port-header">
+                            <span class="port-number">514</span>
+                            <span class="protocol-badge">UDP</span>
+                        </div>
+                        <div class="service-name">Syslog</div>
+                        <div class="port-description">
+                            Централизованное логирование
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Log injection</li>
+                                <li class="threat-item">Information disclosure</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                TLS для syslog, валидация источников, rate limiting
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="port-card risk-low">
+                        <div class="port-header">
+                            <span class="port-number">8080</span>
+                            <span class="protocol-badge">TCP</span>
+                        </div>
+                        <div class="service-name">HTTP Alternate</div>
+                        <div class="port-description">
+                            Альтернативный HTTP порт, прокси
+                        </div>
+                        <div class="threats-section">
+                            <div class="threats-title">🎯 Угрозы:</div>
+                            <ul class="threat-list">
+                                <li class="threat-item">Proxy abuse</li>
+                                <li class="threat-item">Web service exposure</li>
+                            </ul>
+                        </div>
+                        <div class="mitigation-section">
+                            <div class="mitigation-title">🛡️ Защита:</div>
+                            <div class="mitigation-text">
+                                Аутентификация для прокси, мониторинг использования
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="common-attacks">
+            <h2 class="attacks-title">🎯 Распространенные атаки на порты</h2>
+            <div class="attacks-grid">
+                <div class="attack-card">
+                    <div class="attack-name">Port Scanning</div>
+                    <div class="attack-desc">
+                        Сканирование портов для определения открытых сервисов. 
+                        Используется как первый этап разведки перед атакой.
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-name">Service Exploitation</div>
+                    <div class="attack-desc">
+                        Эксплуатация уязвимостей в сервисах, работающих на открытых портах. 
+                        Часто приводит к RCE (Remote Code Execution).
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-name">Brute Force</div>
+                    <div class="attack-desc">
+                        Перебор паролей для сервисов аутентификации (SSH, RDP, FTP). 
+                        Автоматизированные атаки с использованием ботнетов.
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-name">Man-in-the-Middle</div>
+                    <div class="attack-desc">
+                        Перехват и модификация трафика между клиентом и сервером. 
+                        Особенно опасно для незашифрованных протоколов.
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-name">Denial of Service</div>
+                    <div class="attack-desc">
+                        Перегрузка сервиса большим количеством запросов. 
+                        SYN flood, UDP flood, application-layer attacks.
+                    </div>
+                </div>
+                <div class="attack-card">
+                    <div class="attack-name">Protocol Tunneling</div>
+                    <div class="attack-desc">
+                        Использование разрешенных протоколов (DNS, HTTP) для скрытой 
+                        передачи данных и обхода security controls.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="monitoring-tools">
+            <h2 class="tools-title">🛠️ Port Monitoring Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-item">
+                    <div class="tool-icon">🔍</div>
+                    <div class="tool-name">Nmap</div>
+                    <div class="tool-desc">Сканер портов и сервисов</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">📊</div>
+                    <div class="tool-name">Netstat</div>
+                    <div class="tool-desc">Мониторинг сетевых соединений</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">🌊</div>
+                    <div class="tool-name">Wireshark</div>
+                    <div class="tool-desc">Анализ сетевого трафика</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">🛡️</div>
+                    <div class="tool-name">Shodan</div>
+                    <div class="tool-desc">Поиск открытых портов в интернете</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">📈</div>
+                    <div class="tool-name">Masscan</div>
+                    <div class="tool-desc">Быстрое сканирование портов</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">🔐</div>
+                    <div class="tool-name">Nessus</div>
+                    <div class="tool-desc">Сканер уязвимостей</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-name">Zmap</div>
+                    <div class="tool-desc">Internet-wide сканирование</div>
+                </div>
+                <div class="tool-item">
+                    <div class="tool-icon">🎯</div>
+                    <div class="tool-name">TCPView</div>
+                    <div class="tool-desc">Real-time порт монитор Windows</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

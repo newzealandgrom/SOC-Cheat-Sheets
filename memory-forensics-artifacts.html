@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Forensics Artifacts Map</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #a29bfe;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(162, 155, 254, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #dfe6e9;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .os-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .os-tab {
+            padding: 15px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        
+        .os-tab.active {
+            background: rgba(162, 155, 254, 0.2);
+            border-color: #a29bfe;
+            transform: scale(1.05);
+        }
+        
+        .os-tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .artifact-category {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(162, 155, 254, 0.3);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .artifact-category:nth-child(1) { animation-delay: 0.1s; }
+        .artifact-category:nth-child(2) { animation-delay: 0.2s; }
+        .artifact-category:nth-child(3) { animation-delay: 0.3s; }
+        .artifact-category:nth-child(4) { animation-delay: 0.4s; }
+        .artifact-category:nth-child(5) { animation-delay: 0.5s; }
+        .artifact-category:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .artifact-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .category-icon {
+            font-size: 2.5em;
+        }
+        
+        .category-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #a29bfe;
+        }
+        
+        .artifact-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .artifact-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #a29bfe;
+            transition: all 0.3s ease;
+        }
+        
+        .artifact-item:hover {
+            background: rgba(162, 155, 254, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .artifact-name {
+            font-weight: bold;
+            color: #74b9ff;
+            margin-bottom: 5px;
+        }
+        
+        .artifact-desc {
+            font-size: 0.9em;
+            color: #dfe6e9;
+            line-height: 1.5;
+        }
+        
+        .volatility-commands {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(85, 239, 196, 0.3);
+        }
+        
+        .commands-title {
+            font-size: 1.5em;
+            color: #55efc4;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .command-card {
+            background: rgba(85, 239, 196, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(85, 239, 196, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .command-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(85, 239, 196, 0.2);
+        }
+        
+        .command-name {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            color: #55efc4;
+            font-weight: bold;
+        }
+        
+        .command-desc {
+            color: #dfe6e9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .linux-specific,
+        .windows-specific {
+            display: none;
+        }
+        
+        .show-windows .windows-specific {
+            display: grid;
+        }
+        
+        .show-linux .linux-specific {
+            display: grid;
+        }
+        
+        .memory-structure {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .structure-title {
+            font-size: 1.5em;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .memory-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .memory-region {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .region-kernel { border-color: #ff6b6b; }
+        .region-drivers { border-color: #ff9ff3; }
+        .region-processes { border-color: #54a0ff; }
+        .region-heap { border-color: #48dbfb; }
+        .region-stack { border-color: #1dd1a1; }
+        
+        .memory-region:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .region-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .region-content {
+            font-size: 0.9em;
+            color: #dfe6e9;
+            line-height: 1.6;
+        }
+        
+        .forensics-tips {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .tips-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .tip-card {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .tip-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .tip-text {
+            color: #dfe6e9;
+            line-height: 1.6;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .os-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .artifacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Memory Forensics Artifacts Map</h1>
+        <p class="subtitle">Карта артефактов в памяти Windows и Linux систем</p>
+        
+        <div class="os-tabs">
+            <div class="os-tab active" onclick="showOS('windows')">🪟 Windows</div>
+            <div class="os-tab" onclick="showOS('linux')">🐧 Linux</div>
+        </div>
+        
+        <div class="artifacts-grid windows-specific">
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">⚙️</span>
+                    <h3 class="category-title">System Information</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">KDBG (Kernel Debugger Block)</div>
+                        <div class="artifact-desc">Содержит версию ОС, список процессов, загруженные модули</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">KPCR (Kernel Processor Control Region)</div>
+                        <div class="artifact-desc">Информация о процессоре, текущий поток, IDT</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">System Time</div>
+                        <div class="artifact-desc">Системное время на момент дампа памяти</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">📊</span>
+                    <h3 class="category-title">Process Artifacts</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">EPROCESS Structure</div>
+                        <div class="artifact-desc">PID, PPID, время создания, путь к исполняемому файлу</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">PEB (Process Environment Block)</div>
+                        <div class="artifact-desc">Командная строка, переменные окружения, загруженные DLL</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">VAD (Virtual Address Descriptors)</div>
+                        <div class="artifact-desc">Карта памяти процесса, инжектированный код</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Handles</div>
+                        <div class="artifact-desc">Открытые файлы, ключи реестра, мьютексы</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🌐</span>
+                    <h3 class="category-title">Network Artifacts</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Network Connections</div>
+                        <div class="artifact-desc">TCP/UDP соединения, порты, IP-адреса</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Socket Objects</div>
+                        <div class="artifact-desc">Детальная информация о сетевых сокетах</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">DNS Cache</div>
+                        <div class="artifact-desc">Кэшированные DNS записи</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🔑</span>
+                    <h3 class="category-title">Registry & Security</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Registry Hives in Memory</div>
+                        <div class="artifact-desc">SYSTEM, SOFTWARE, SAM, SECURITY</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">LSA Secrets</div>
+                        <div class="artifact-desc">Кэшированные учетные данные домена</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Tokens</div>
+                        <div class="artifact-desc">Токены безопасности процессов</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🚗</span>
+                    <h3 class="category-title">Drivers & Modules</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Loaded Drivers</div>
+                        <div class="artifact-desc">Список загруженных драйверов и их адреса</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">SSDT (System Service Descriptor Table)</div>
+                        <div class="artifact-desc">Таблица системных вызовов, руткит-модификации</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">IRP Hooks</div>
+                        <div class="artifact-desc">Перехваченные функции драйверов</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🗑️</span>
+                    <h3 class="category-title">Malware Indicators</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Injected Code</div>
+                        <div class="artifact-desc">Код в памяти без соответствующего файла на диске</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Hidden Processes</div>
+                        <div class="artifact-desc">Процессы, скрытые через DKOM</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Hooked Functions</div>
+                        <div class="artifact-desc">Inline hooks, IAT hooks</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="artifacts-grid linux-specific">
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🐧</span>
+                    <h3 class="category-title">System Information</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">System.map</div>
+                        <div class="artifact-desc">Символы ядра и их адреса</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Kernel Version</div>
+                        <div class="artifact-desc">Версия и сборка ядра Linux</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Boot Time</div>
+                        <div class="artifact-desc">Время загрузки системы</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">📊</span>
+                    <h3 class="category-title">Process Information</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">task_struct</div>
+                        <div class="artifact-desc">Основная структура процесса: PID, состояние, приоритет</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">mm_struct</div>
+                        <div class="artifact-desc">Карта памяти процесса, VMA</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">files_struct</div>
+                        <div class="artifact-desc">Открытые файловые дескрипторы</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🌐</span>
+                    <h3 class="category-title">Network Information</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">sock Structure</div>
+                        <div class="artifact-desc">Информация о сетевых соединениях</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Netfilter Hooks</div>
+                        <div class="artifact-desc">Правила фильтрации пакетов</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">ARP Cache</div>
+                        <div class="artifact-desc">Кэш ARP таблицы</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">📁</span>
+                    <h3 class="category-title">File System</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">dentry Cache</div>
+                        <div class="artifact-desc">Кэш директорий и файлов</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">inode Cache</div>
+                        <div class="artifact-desc">Метаданные файлов в памяти</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Mount Points</div>
+                        <div class="artifact-desc">Точки монтирования файловых систем</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🔌</span>
+                    <h3 class="category-title">Kernel Modules</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Loaded Modules</div>
+                        <div class="artifact-desc">Список загруженных модулей ядра</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Hidden Modules</div>
+                        <div class="artifact-desc">Модули, скрытые из списков</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">sys_call_table</div>
+                        <div class="artifact-desc">Таблица системных вызовов</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="artifact-category">
+                <div class="category-header">
+                    <span class="category-icon">🛡️</span>
+                    <h3 class="category-title">Security</h3>
+                </div>
+                <ul class="artifact-list">
+                    <li class="artifact-item">
+                        <div class="artifact-name">Credentials</div>
+                        <div class="artifact-desc">UID, GID, capabilities процессов</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">SELinux Context</div>
+                        <div class="artifact-desc">Контексты безопасности SELinux</div>
+                    </li>
+                    <li class="artifact-item">
+                        <div class="artifact-name">Bash History</div>
+                        <div class="artifact-desc">История команд в памяти</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="volatility-commands">
+            <h2 class="commands-title">🔧 Volatility Essential Commands</h2>
+            <div class="commands-grid">
+                <div class="command-card">
+                    <div class="command-name">imageinfo / windows.info</div>
+                    <div class="command-desc">Определение профиля и основной информации о дампе</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">pslist / pstree</div>
+                    <div class="command-desc">Список процессов и их иерархия</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">netscan / connections</div>
+                    <div class="command-desc">Сетевые соединения и сокеты</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">malfind</div>
+                    <div class="command-desc">Поиск инжектированного кода и скрытых процессов</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">dlllist / ldrmodules</div>
+                    <div class="command-desc">Загруженные DLL и их проверка</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">cmdline</div>
+                    <div class="command-desc">Командные строки процессов</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">filescan</div>
+                    <div class="command-desc">Поиск файловых объектов в памяти</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">dumpfiles</div>
+                    <div class="command-desc">Извлечение файлов из памяти</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">hashdump</div>
+                    <div class="command-desc">Извлечение хешей паролей</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">hivelist / printkey</div>
+                    <div class="command-desc">Работа с реестром в памяти</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">timeliner</div>
+                    <div class="command-desc">Создание временной линии событий</div>
+                </div>
+                <div class="command-card">
+                    <div class="command-name">volshell</div>
+                    <div class="command-desc">Интерактивная оболочка для исследования</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="memory-structure">
+            <h2 class="structure-title">🗺️ Memory Layout Structure</h2>
+            <div class="memory-layout">
+                <div class="memory-region region-kernel">
+                    <div class="region-name">Kernel Space</div>
+                    <div class="region-content">Ядро ОС, драйверы устройств, системные таблицы (SSDT, IDT, GDT)</div>
+                </div>
+                <div class="memory-region region-drivers">
+                    <div class="region-name">Driver Space</div>
+                    <div class="region-content">Загруженные драйверы, их код и данные</div>
+                </div>
+                <div class="memory-region region-processes">
+                    <div class="region-name">Process Space</div>
+                    <div class="region-content">Код программ, загруженные библиотеки, PEB/TEB</div>
+                </div>
+                <div class="memory-region region-heap">
+                    <div class="region-name">Heap</div>
+                    <div class="region-content">Динамически выделенная память, объекты</div>
+                </div>
+                <div class="memory-region region-stack">
+                    <div class="region-name">Stack</div>
+                    <div class="region-content">Стек вызовов, локальные переменные, return адреса</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="forensics-tips">
+            <h2 class="tips-title">💡 Memory Forensics Best Practices</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-icon">⚡</div>
+                    <div class="tip-text">Всегда сначала снимайте дамп памяти - это самые волатильные данные</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">🔐</div>
+                    <div class="tip-text">Используйте проверенные инструменты для снятия дампа: WinPMEM, DumpIt, FTK Imager</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">🎯</div>
+                    <div class="tip-text">Создавайте профили Volatility для нестандартных систем заранее</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">📊</div>
+                    <div class="tip-text">Сравнивайте результаты разных плагинов для обнаружения руткитов</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">🔍</div>
+                    <div class="tip-text">Обращайте внимание на процессы без родителя и с подозрительными путями</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-icon">⏰</div>
+                    <div class="tip-text">Документируйте временные метки для построения timeline атаки</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showOS(os) {
+            const container = document.querySelector('.container');
+            const tabs = document.querySelectorAll('.os-tab');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            if (os === 'windows') {
+                container.classList.add('show-windows');
+                container.classList.remove('show-linux');
+                tabs[0].classList.add('active');
+            } else {
+                container.classList.add('show-linux');
+                container.classList.remove('show-windows');
+                tabs[1].classList.add('active');
+            }
+        }
+        
+        // Initialize with Windows
+        showOS('windows');
+    </script>
+</body>
+</html>

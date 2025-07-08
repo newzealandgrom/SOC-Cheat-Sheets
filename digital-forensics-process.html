@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Forensics Process Flow</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8b2d1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .process-flow {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .flow-title {
+            font-size: 1.8em;
+            color: #00d4ff;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .process-stages {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 30px;
+            position: relative;
+        }
+        
+        .stage {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid;
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .stage:nth-child(1) { animation-delay: 0.1s; border-color: #ff6b6b; }
+        .stage:nth-child(2) { animation-delay: 0.2s; border-color: #ffa502; }
+        .stage:nth-child(3) { animation-delay: 0.3s; border-color: #ffdd59; }
+        .stage:nth-child(4) { animation-delay: 0.4s; border-color: #48dbfb; }
+        .stage:nth-child(5) { animation-delay: 0.5s; border-color: #00d4ff; }
+        .stage:nth-child(6) { animation-delay: 0.6s; border-color: #a29bfe; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stage:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .stage-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: inherit;
+            border: inherit;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            background: #1a1a2e;
+        }
+        
+        .stage-icon {
+            font-size: 2.5em;
+            display: block;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .stage-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .stage-desc {
+            color: #a8b2d1;
+            font-size: 0.9em;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .stage-tasks {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .stage-tasks li {
+            padding: 8px 0;
+            font-size: 0.85em;
+            color: #ccd6f6;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .stage-tasks li::before {
+            content: '▸';
+            color: inherit;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .principles-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .principles-title {
+            font-size: 1.5em;
+            color: #00d4ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .principle-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .principle-card:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.2);
+        }
+        
+        .principle-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            display: block;
+            text-align: center;
+        }
+        
+        .principle-name {
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .principle-desc {
+            color: #a8b2d1;
+            font-size: 0.9em;
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .tools-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(106, 176, 76, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.5em;
+            color: #6ab04c;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tools-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        
+        .tool-category {
+            background: rgba(106, 176, 76, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(106, 176, 76, 0.3);
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #6ab04c;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .tool-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tool-list li {
+            padding: 8px 0;
+            color: #ccd6f6;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-list li:hover {
+            color: #6ab04c;
+            transform: translateX(5px);
+        }
+        
+        .artifacts-timeline {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .timeline-title {
+            font-size: 1.5em;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .volatility-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .volatility-item {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(255, 107, 107, 0.05));
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .volatility-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.2);
+        }
+        
+        .volatility-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .volatility-name {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+        
+        .volatility-time {
+            font-size: 0.9em;
+            color: #a8b2d1;
+        }
+        
+        .legal-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .legal-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .legal-requirements {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .requirement-card {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .requirement-title {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .requirement-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .requirement-list li {
+            padding: 8px 0;
+            color: #ccd6f6;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .requirement-list li::before {
+            content: '⚖️';
+            margin-top: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .process-stages {
+                flex-direction: column;
+            }
+            
+            .stage {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Digital Forensics Process Flow</h1>
+        <p class="subtitle">Поэтапный процесс цифровой форензики для SOC аналитиков</p>
+        
+        <div class="process-flow">
+            <h2 class="flow-title">📊 Основные этапы форензики</h2>
+            <div class="process-stages">
+                <div class="stage">
+                    <div class="stage-number">1</div>
+                    <span class="stage-icon">🚨</span>
+                    <h3 class="stage-title">Identification</h3>
+                    <p class="stage-desc">Идентификация инцидента</p>
+                    <ul class="stage-tasks">
+                        <li>Определение типа инцидента</li>
+                        <li>Идентификация затронутых систем</li>
+                        <li>Оценка масштаба</li>
+                        <li>Первичная триаж</li>
+                    </ul>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">2</div>
+                    <span class="stage-icon">🔒</span>
+                    <h3 class="stage-title">Preservation</h3>
+                    <p class="stage-desc">Сохранение улик</p>
+                    <ul class="stage-tasks">
+                        <li>Изоляция систем</li>
+                        <li>Предотвращение изменений</li>
+                        <li>Документирование состояния</li>
+                        <li>Chain of custody</li>
+                    </ul>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">3</div>
+                    <span class="stage-icon">📦</span>
+                    <h3 class="stage-title">Collection</h3>
+                    <p class="stage-desc">Сбор данных</p>
+                    <ul class="stage-tasks">
+                        <li>Live memory capture</li>
+                        <li>Disk imaging</li>
+                        <li>Network traffic capture</li>
+                        <li>Log collection</li>
+                    </ul>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">4</div>
+                    <span class="stage-icon">🔬</span>
+                    <h3 class="stage-title">Examination</h3>
+                    <p class="stage-desc">Исследование</p>
+                    <ul class="stage-tasks">
+                        <li>Валидация данных</li>
+                        <li>Извлечение артефактов</li>
+                        <li>Восстановление удаленных</li>
+                        <li>Дешифрование</li>
+                    </ul>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">5</div>
+                    <span class="stage-icon">🧪</span>
+                    <h3 class="stage-title">Analysis</h3>
+                    <p class="stage-desc">Анализ</p>
+                    <ul class="stage-tasks">
+                        <li>Timeline reconstruction</li>
+                        <li>Корреляция событий</li>
+                        <li>Attribution</li>
+                        <li>Root cause analysis</li>
+                    </ul>
+                </div>
+                
+                <div class="stage">
+                    <div class="stage-number">6</div>
+                    <span class="stage-icon">📋</span>
+                    <h3 class="stage-title">Reporting</h3>
+                    <p class="stage-desc">Отчетность</p>
+                    <ul class="stage-tasks">
+                        <li>Executive summary</li>
+                        <li>Technical details</li>
+                        <li>Recommendations</li>
+                        <li>Lessons learned</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="principles-section">
+            <h2 class="principles-title">🎯 Ключевые принципы форензики</h2>
+            <div class="principles-grid">
+                <div class="principle-card">
+                    <span class="principle-icon">⚖️</span>
+                    <div class="principle-name">Legal Admissibility</div>
+                    <div class="principle-desc">Соблюдение юридических требований для использования доказательств в суде</div>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-icon">🔗</span>
+                    <div class="principle-name">Chain of Custody</div>
+                    <div class="principle-desc">Документирование всех действий с уликами от сбора до презентации</div>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-icon">🛡️</span>
+                    <div class="principle-name">Data Integrity</div>
+                    <div class="principle-desc">Обеспечение неизменности оригинальных данных через хеширование</div>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-icon">📝</span>
+                    <div class="principle-name">Documentation</div>
+                    <div class="principle-desc">Детальное документирование всех действий и находок</div>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-icon">🔄</span>
+                    <div class="principle-name">Repeatability</div>
+                    <div class="principle-desc">Возможность воспроизвести результаты другим экспертом</div>
+                </div>
+                <div class="principle-card">
+                    <span class="principle-icon">🚫</span>
+                    <div class="principle-name">Non-Interference</div>
+                    <div class="principle-desc">Минимизация воздействия на исследуемую систему</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="artifacts-timeline">
+            <h2 class="timeline-title">⏱️ Volatility of Digital Evidence</h2>
+            <div class="volatility-grid">
+                <div class="volatility-item">
+                    <div class="volatility-icon">⚡</div>
+                    <div class="volatility-name">CPU Registers</div>
+                    <div class="volatility-time">Nanoseconds</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">💨</div>
+                    <div class="volatility-name">CPU Cache</div>
+                    <div class="volatility-time">Nanoseconds</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">🧠</div>
+                    <div class="volatility-name">RAM Memory</div>
+                    <div class="volatility-time">Until power off</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">🌐</div>
+                    <div class="volatility-name">Network State</div>
+                    <div class="volatility-time">Seconds</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">⏱️</div>
+                    <div class="volatility-name">Running Processes</div>
+                    <div class="volatility-time">Until terminated</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">💾</div>
+                    <div class="volatility-name">Temp Files</div>
+                    <div class="volatility-time">Minutes to hours</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">📁</div>
+                    <div class="volatility-name">Swap/Page Files</div>
+                    <div class="volatility-time">Until overwritten</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">💿</div>
+                    <div class="volatility-name">Hard Drive</div>
+                    <div class="volatility-time">Years</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">📀</div>
+                    <div class="volatility-name">Optical Media</div>
+                    <div class="volatility-time">Decades</div>
+                </div>
+                <div class="volatility-item">
+                    <div class="volatility-icon">📄</div>
+                    <div class="volatility-name">Paper Printouts</div>
+                    <div class="volatility-time">Decades+</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-section">
+            <h2 class="tools-title">🛠️ Forensics Tools Arsenal</h2>
+            <div class="tools-categories">
+                <div class="tool-category">
+                    <div class="category-name">💾 Disk Forensics</div>
+                    <ul class="tool-list">
+                        <li>FTK Imager</li>
+                        <li>EnCase</li>
+                        <li>Autopsy / The Sleuth Kit</li>
+                        <li>X-Ways Forensics</li>
+                        <li>dd / dcfldd</li>
+                    </ul>
+                </div>
+                <div class="tool-category">
+                    <div class="category-name">🧠 Memory Forensics</div>
+                    <ul class="tool-list">
+                        <li>Volatility Framework</li>
+                        <li>Rekall</li>
+                        <li>Redline</li>
+                        <li>DumpIt</li>
+                        <li>WinPMEM</li>
+                    </ul>
+                </div>
+                <div class="tool-category">
+                    <div class="category-name">🌐 Network Forensics</div>
+                    <ul class="tool-list">
+                        <li>Wireshark</li>
+                        <li>NetworkMiner</li>
+                        <li>tcpdump</li>
+                        <li>Netwitness</li>
+                        <li>Security Onion</li>
+                    </ul>
+                </div>
+                <div class="tool-category">
+                    <div class="category-name">📱 Mobile Forensics</div>
+                    <ul class="tool-list">
+                        <li>Cellebrite UFED</li>
+                        <li>Oxygen Forensic Suite</li>
+                        <li>XRY</li>
+                        <li>Magnet AXIOM</li>
+                        <li>Android Debug Bridge</li>
+                    </ul>
+                </div>
+                <div class="tool-category">
+                    <div class="category-name">🔍 Analysis Tools</div>
+                    <ul class="tool-list">
+                        <li>Timeline Explorer</li>
+                        <li>Log2Timeline</li>
+                        <li>RegRipper</li>
+                        <li>YARA</li>
+                        <li>CyberChef</li>
+                    </ul>
+                </div>
+                <div class="tool-category">
+                    <div class="category-name">📊 Reporting</div>
+                    <ul class="tool-list">
+                        <li>Magnet AXIOM Examine</li>
+                        <li>CaseNotes</li>
+                        <li>Forensic Toolkit (FTK)</li>
+                        <li>SANS SIFT Workstation</li>
+                        <li>Paladin</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="legal-section">
+            <h2 class="legal-title">⚖️ Legal Considerations</h2>
+            <div class="legal-requirements">
+                <div class="requirement-card">
+                    <h3 class="requirement-title">📜 Правовые требования</h3>
+                    <ul class="requirement-list">
+                        <li>Получение необходимых ордеров и разрешений</li>
+                        <li>Соблюдение приватности и конфиденциальности</li>
+                        <li>Документирование юридических оснований</li>
+                        <li>Соответствие локальному законодательству</li>
+                    </ul>
+                </div>
+                <div class="requirement-card">
+                    <h3 class="requirement-title">🔐 Chain of Custody</h3>
+                    <ul class="requirement-list">
+                        <li>Фиксация времени и места изъятия</li>
+                        <li>Документирование всех передач улик</li>
+                        <li>Использование tamper-evident упаковки</li>
+                        <li>Хранение в безопасном месте</li>
+                    </ul>
+                </div>
+                <div class="requirement-card">
+                    <h3 class="requirement-title">📋 Документация</h3>
+                    <ul class="requirement-list">
+                        <li>Детальные записи всех действий</li>
+                        <li>Фотографирование физического состояния</li>
+                        <li>Хеш-суммы всех образов</li>
+                        <li>Подписи ответственных лиц</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

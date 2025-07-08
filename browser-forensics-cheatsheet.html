@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Forensics Cheat Sheet</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffeaa7;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 234, 167, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #dfe6e9;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .browser-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .browser-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+        
+        .browser-card:nth-child(1) { animation-delay: 0.1s; border-color: #4285f4; }
+        .browser-card:nth-child(2) { animation-delay: 0.2s; border-color: #ff6348; }
+        .browser-card:nth-child(3) { animation-delay: 0.3s; border-color: #0078d4; }
+        .browser-card:nth-child(4) { animation-delay: 0.4s; border-color: #00d2d3; }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .browser-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transition: all 0.5s ease;
+        }
+        
+        .browser-card:hover::before {
+            top: -150%;
+            left: -150%;
+        }
+        
+        .browser-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .browser-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .browser-icon {
+            font-size: 3em;
+        }
+        
+        .browser-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .artifact-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #ffeaa7;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .artifact-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .artifact-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .artifact-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .file-path {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .os-specific {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .os-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .artifacts-detail {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 234, 167, 0.3);
+        }
+        
+        .detail-title {
+            font-size: 1.5em;
+            color: #ffeaa7;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 234, 167, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .detail-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .detail-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .detail-name {
+            font-weight: bold;
+            color: #ffeaa7;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .detail-desc {
+            color: #dfe6e9;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .sqlite-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 184, 148, 0.3);
+        }
+        
+        .sqlite-title {
+            font-size: 1.5em;
+            color: #00b894;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .database-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .database-card {
+            background: rgba(0, 184, 148, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(0, 184, 148, 0.3);
+        }
+        
+        .db-name {
+            font-weight: bold;
+            color: #00b894;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .table-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .table-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .tools-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(253, 121, 168, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.5em;
+            color: #fd79a8;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tool-card {
+            background: rgba(253, 121, 168, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(253, 121, 168, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(253, 121, 168, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #fd79a8;
+            margin-bottom: 10px;
+        }
+        
+        .tool-desc {
+            font-size: 0.9em;
+            color: #dfe6e9;
+        }
+        
+        .analysis-tips {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .tips-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tips-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .tip-item {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .tip-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+        
+        .tip-text {
+            color: #dfe6e9;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .browser-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Browser Forensics Cheat Sheet</h1>
+        <p class="subtitle">Артефакты браузеров и их расположение для форензик анализа</p>
+        
+        <div class="browser-grid">
+            <div class="browser-card">
+                <div class="browser-header">
+                    <span class="browser-icon">🌍</span>
+                    <h2 class="browser-name">Google Chrome</h2>
+                </div>
+                
+                <div class="artifact-section">
+                    <h3 class="section-title">📁 Основные артефакты</h3>
+                    <ul class="artifact-list">
+                        <li class="artifact-item">
+                            History - история посещений
+                            <div class="file-path">Default\History</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cookies - сохраненные куки
+                            <div class="file-path">Default\Cookies</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cache - кэш браузера
+                            <div class="file-path">Default\Cache\</div>
+                        </li>
+                        <li class="artifact-item">
+                            Downloads - история загрузок
+                            <div class="file-path">Default\History (downloads table)</div>
+                        </li>
+                        <li class="artifact-item">
+                            Bookmarks - закладки
+                            <div class="file-path">Default\Bookmarks</div>
+                        </li>
+                        <li class="artifact-item">
+                            Autofill - автозаполнение форм
+                            <div class="file-path">Default\Web Data</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="os-specific">
+                    <div class="os-badge">🪟 Windows</div>
+                    <div class="file-path">%LOCALAPPDATA%\Google\Chrome\User Data\</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🍎 macOS</div>
+                    <div class="file-path">~/Library/Application Support/Google/Chrome/</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🐧 Linux</div>
+                    <div class="file-path">~/.config/google-chrome/</div>
+                </div>
+            </div>
+            
+            <div class="browser-card">
+                <div class="browser-header">
+                    <span class="browser-icon">🦊</span>
+                    <h2 class="browser-name">Mozilla Firefox</h2>
+                </div>
+                
+                <div class="artifact-section">
+                    <h3 class="section-title">📁 Основные артефакты</h3>
+                    <ul class="artifact-list">
+                        <li class="artifact-item">
+                            History - история посещений
+                            <div class="file-path">places.sqlite</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cookies - сохраненные куки
+                            <div class="file-path">cookies.sqlite</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cache - кэш браузера
+                            <div class="file-path">cache2\entries\</div>
+                        </li>
+                        <li class="artifact-item">
+                            Downloads - история загрузок
+                            <div class="file-path">places.sqlite (moz_annos table)</div>
+                        </li>
+                        <li class="artifact-item">
+                            Bookmarks - закладки
+                            <div class="file-path">places.sqlite (moz_bookmarks)</div>
+                        </li>
+                        <li class="artifact-item">
+                            Form History - история форм
+                            <div class="file-path">formhistory.sqlite</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="os-specific">
+                    <div class="os-badge">🪟 Windows</div>
+                    <div class="file-path">%APPDATA%\Mozilla\Firefox\Profiles\*.default\</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🍎 macOS</div>
+                    <div class="file-path">~/Library/Application Support/Firefox/Profiles/</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🐧 Linux</div>
+                    <div class="file-path">~/.mozilla/firefox/*.default/</div>
+                </div>
+            </div>
+            
+            <div class="browser-card">
+                <div class="browser-header">
+                    <span class="browser-icon">🔷</span>
+                    <h2 class="browser-name">Microsoft Edge</h2>
+                </div>
+                
+                <div class="artifact-section">
+                    <h3 class="section-title">📁 Основные артефакты</h3>
+                    <ul class="artifact-list">
+                        <li class="artifact-item">
+                            History - история посещений
+                            <div class="file-path">Default\History</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cookies - сохраненные куки
+                            <div class="file-path">Default\Cookies</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cache - кэш браузера
+                            <div class="file-path">Default\Cache\</div>
+                        </li>
+                        <li class="artifact-item">
+                            Collections - коллекции
+                            <div class="file-path">Default\Collections\collectionsSQLite</div>
+                        </li>
+                        <li class="artifact-item">
+                            Passwords - сохраненные пароли
+                            <div class="file-path">Default\Login Data</div>
+                        </li>
+                        <li class="artifact-item">
+                            Sessions - сессии
+                            <div class="file-path">Default\Sessions\</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="os-specific">
+                    <div class="os-badge">🪟 Windows</div>
+                    <div class="file-path">%LOCALAPPDATA%\Microsoft\Edge\User Data\</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🍎 macOS</div>
+                    <div class="file-path">~/Library/Application Support/Microsoft Edge/</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">🐧 Linux</div>
+                    <div class="file-path">~/.config/microsoft-edge/</div>
+                </div>
+            </div>
+            
+            <div class="browser-card">
+                <div class="browser-header">
+                    <span class="browser-icon">🧭</span>
+                    <h2 class="browser-name">Safari</h2>
+                </div>
+                
+                <div class="artifact-section">
+                    <h3 class="section-title">📁 Основные артефакты</h3>
+                    <ul class="artifact-list">
+                        <li class="artifact-item">
+                            History - история посещений
+                            <div class="file-path">History.db</div>
+                        </li>
+                        <li class="artifact-item">
+                            Downloads - история загрузок
+                            <div class="file-path">Downloads.plist</div>
+                        </li>
+                        <li class="artifact-item">
+                            Bookmarks - закладки
+                            <div class="file-path">Bookmarks.plist</div>
+                        </li>
+                        <li class="artifact-item">
+                            Cache - кэш браузера
+                            <div class="file-path">com.apple.Safari/Cache.db</div>
+                        </li>
+                        <li class="artifact-item">
+                            Top Sites - часто посещаемые
+                            <div class="file-path">TopSites.plist</div>
+                        </li>
+                        <li class="artifact-item">
+                            Last Session - последняя сессия
+                            <div class="file-path">LastSession.plist</div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="os-specific">
+                    <div class="os-badge">🍎 macOS</div>
+                    <div class="file-path">~/Library/Safari/</div>
+                </div>
+                <div class="os-specific">
+                    <div class="os-badge">📱 iOS</div>
+                    <div class="file-path">/private/var/mobile/Library/Safari/</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="artifacts-detail">
+            <h2 class="detail-title">🔍 Детальное описание артефактов</h2>
+            <div class="detail-grid">
+                <div class="detail-card">
+                    <div class="detail-icon">📜</div>
+                    <div class="detail-name">История браузера</div>
+                    <div class="detail-desc">
+                        Содержит URL, заголовки страниц, время посещения, количество визитов. 
+                        Ключевая информация для восстановления активности пользователя.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">🍪</div>
+                    <div class="detail-name">Cookies</div>
+                    <div class="detail-desc">
+                        Сессионные данные, токены аутентификации, настройки сайтов. 
+                        Могут содержать информацию о залогиненных аккаунтах.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">💾</div>
+                    <div class="detail-name">Кэш браузера</div>
+                    <div class="detail-desc">
+                        Изображения, HTML страницы, JavaScript файлы. 
+                        Позволяет восстановить контент даже удаленных сайтов.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">⬇️</div>
+                    <div class="detail-name">История загрузок</div>
+                    <div class="detail-desc">
+                        Список скачанных файлов с URL источника, временем загрузки, 
+                        размером и путем сохранения на диске.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">⭐</div>
+                    <div class="detail-name">Закладки</div>
+                    <div class="detail-desc">
+                        Сохраненные пользователем сайты, структура папок, 
+                        время добавления. Показывают интересы пользователя.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">🔑</div>
+                    <div class="detail-name">Сохраненные пароли</div>
+                    <div class="detail-desc">
+                        Зашифрованные учетные данные. Можно расшифровать 
+                        используя мастер-ключ из системы.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">📝</div>
+                    <div class="detail-name">Автозаполнение форм</div>
+                    <div class="detail-desc">
+                        Имена, адреса, телефоны, email и другие данные, 
+                        введенные в веб-формы.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">🔌</div>
+                    <div class="detail-name">Расширения</div>
+                    <div class="detail-desc">
+                        Установленные дополнения, их настройки и разрешения. 
+                        Могут содержать вредоносный код.
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-icon">📍</div>
+                    <div class="detail-name">Local Storage</div>
+                    <div class="detail-desc">
+                        Данные веб-приложений, сохраненные локально. 
+                        Часто содержат токены и настройки.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sqlite-section">
+            <h2 class="sqlite-title">🗄️ SQLite Database Structure</h2>
+            <div class="database-grid">
+                <div class="database-card">
+                    <div class="db-name">Chrome/Edge History Database</div>
+                    <ul class="table-list">
+                        <li class="table-item">urls - все посещенные URL</li>
+                        <li class="table-item">visits - детали каждого визита</li>
+                        <li class="table-item">downloads - информация о загрузках</li>
+                        <li class="table-item">keyword_search_terms - поисковые запросы</li>
+                        <li class="table-item">segments - сегменты URL для поиска</li>
+                    </ul>
+                </div>
+                
+                <div class="database-card">
+                    <div class="db-name">Firefox places.sqlite</div>
+                    <ul class="table-list">
+                        <li class="table-item">moz_places - история URL</li>
+                        <li class="table-item">moz_historyvisits - визиты</li>
+                        <li class="table-item">moz_bookmarks - закладки</li>
+                        <li class="table-item">moz_inputhistory - история ввода</li>
+                        <li class="table-item">moz_favicons - иконки сайтов</li>
+                    </ul>
+                </div>
+                
+                <div class="database-card">
+                    <div class="db-name">Chrome Web Data</div>
+                    <ul class="table-list">
+                        <li class="table-item">autofill - данные автозаполнения</li>
+                        <li class="table-item">credit_cards - сохраненные карты</li>
+                        <li class="table-item">autofill_profiles - профили</li>
+                        <li class="table-item">keywords - поисковые движки</li>
+                    </ul>
+                </div>
+                
+                <div class="database-card">
+                    <div class="db-name">Safari History.db</div>
+                    <ul class="table-list">
+                        <li class="table-item">history_items - элементы истории</li>
+                        <li class="table-item">history_visits - посещения</li>
+                        <li class="table-item">history_tombstones - удаленные записи</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-section">
+            <h2 class="tools-title">🛠️ Browser Forensics Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <div class="tool-icon">🔍</div>
+                    <div class="tool-name">Browser History Examiner</div>
+                    <div class="tool-desc">Комплексный анализ истории всех браузеров</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <div class="tool-name">Chrome History View</div>
+                    <div class="tool-desc">Просмотр истории Chrome/Edge без запуска браузера</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🗄️</div>
+                    <div class="tool-name">DB Browser for SQLite</div>
+                    <div class="tool-desc">Просмотр и анализ SQLite баз данных браузеров</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">💾</div>
+                    <div class="tool-name">ChromeCacheView</div>
+                    <div class="tool-desc">Извлечение файлов из кэша Chrome</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔐</div>
+                    <div class="tool-name">ChromePass</div>
+                    <div class="tool-desc">Извлечение сохраненных паролей</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🦊</div>
+                    <div class="tool-name">Dumpzilla</div>
+                    <div class="tool-desc">Python скрипт для анализа Firefox</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🌐</div>
+                    <div class="tool-name">Hindsight</div>
+                    <div class="tool-desc">Кроссплатформенный анализ Chrome артефактов</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">📱</div>
+                    <div class="tool-name">Browser History Capturer</div>
+                    <div class="tool-desc">Захват истории из запущенных браузеров</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-tips">
+            <h2 class="tips-title">💡 Советы по анализу</h2>
+            <div class="tips-list">
+                <div class="tip-item">
+                    <span class="tip-icon">⏰</span>
+                    <div class="tip-text">Обращайте внимание на временные метки - они могут быть в разных форматах (Unix timestamp, WebKit time)</div>
+                </div>
+                
+                <div class="tip-item">
+                    <span class="tip-icon">🔄</span>
+                    <div class="tip-text">Проверяйте синхронизированные данные - они могут содержать информацию с других устройств пользователя</div>
+                </div>
+                
+                <div class="tip-item">
+                    <span class="tip-icon">🗑️</span>
+                    <div class="tip-text">Удаленные записи часто остаются в SQLite базах как неиспользуемое пространство - используйте carving</div>
+                </div>
+                
+                <div class="tip-item">
+                    <span class="tip-icon">🎯</span>
+                    <div class="tip-text">Session Storage и Local Storage могут содержать важные данные веб-приложений</div>
+                </div>
+                
+                <div class="tip-item">
+                    <span class="tip-icon">🔐</span>
+                    <div class="tip-text">Для расшифровки паролей Chrome/Edge нужен доступ к DPAPI ключам Windows</div>
+                </div>
+                
+                <div class="tip-item">
+                    <span class="tip-icon">📸</span>
+                    <div class="tip-text">Кэш может содержать превью изображений и видео даже с приватных сайтов</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
