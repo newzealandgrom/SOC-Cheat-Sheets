@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intelligence Lifecycle</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1b1b2f 0%, #162447 50%, #1f4068 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #e43f5a;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(228, 63, 90, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8b2d1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .lifecycle-circle {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 50px auto;
+            animation: rotateSlowly 60s linear infinite;
+        }
+        
+        @keyframes rotateSlowly {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .lifecycle-phase {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 3px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: counterRotate 60s linear infinite;
+        }
+        
+        @keyframes counterRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+        
+        .lifecycle-phase:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+        
+        .phase-1 { 
+            top: 0; 
+            left: 50%; 
+            transform: translateX(-50%);
+            border-color: #e43f5a;
+            background: linear-gradient(135deg, rgba(228, 63, 90, 0.2), rgba(228, 63, 90, 0.1));
+        }
+        
+        .phase-2 { 
+            top: 20%; 
+            right: 5%;
+            border-color: #e4c441;
+            background: linear-gradient(135deg, rgba(228, 196, 65, 0.2), rgba(228, 196, 65, 0.1));
+        }
+        
+        .phase-3 { 
+            bottom: 20%; 
+            right: 5%;
+            border-color: #00d2ff;
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(0, 210, 255, 0.1));
+        }
+        
+        .phase-4 { 
+            bottom: 0; 
+            left: 50%; 
+            transform: translateX(-50%);
+            border-color: #1eb980;
+            background: linear-gradient(135deg, rgba(30, 185, 128, 0.2), rgba(30, 185, 128, 0.1));
+        }
+        
+        .phase-5 { 
+            bottom: 20%; 
+            left: 5%;
+            border-color: #a64cff;
+            background: linear-gradient(135deg, rgba(166, 76, 255, 0.2), rgba(166, 76, 255, 0.1));
+        }
+        
+        .phase-6 { 
+            top: 20%; 
+            left: 5%;
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+        }
+        
+        .phase-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .phase-name {
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            animation: none;
+        }
+        
+        .phase-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 50px 0;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detail-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--phase-color), transparent);
+        }
+        
+        .detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .detail-card.phase-1 { --phase-color: #e43f5a; }
+        .detail-card.phase-2 { --phase-color: #e4c441; }
+        .detail-card.phase-3 { --phase-color: #00d2ff; }
+        .detail-card.phase-4 { --phase-color: #1eb980; }
+        .detail-card.phase-5 { --phase-color: #a64cff; }
+        .detail-card.phase-6 { --phase-color: #ff6b6b; }
+        
+        .detail-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-content {
+            color: #a8b2d1;
+            line-height: 1.6;
+        }
+        
+        .detail-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .detail-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .detail-list li::before {
+            content: '▸';
+            color: var(--phase-color);
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .sources-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(228, 63, 90, 0.3);
+        }
+        
+        .sources-title {
+            font-size: 1.5em;
+            color: #e43f5a;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .source-category {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #e43f5a;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .source-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .source-item:hover {
+            background: rgba(228, 63, 90, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .platforms-comparison {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+        }
+        
+        .platforms-title {
+            font-size: 1.5em;
+            color: #00d2ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .platform-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .platform-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .platform-logo {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .platform-name {
+            font-weight: bold;
+            color: #00d2ff;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        
+        .platform-features {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 0.9em;
+        }
+        
+        .platform-features li {
+            padding: 5px 0;
+            color: #a8b2d1;
+        }
+        
+        .platform-features li::before {
+            content: '✓ ';
+            color: #1eb980;
+            font-weight: bold;
+        }
+        
+        .frameworks-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            border: 1px solid rgba(166, 76, 255, 0.3);
+        }
+        
+        .frameworks-title {
+            font-size: 1.5em;
+            color: #a64cff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .framework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .framework-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid rgba(166, 76, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .framework-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(166, 76, 255, 0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .framework-name {
+            font-weight: bold;
+            color: #a64cff;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        
+        .framework-desc {
+            color: #a8b2d1;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .framework-components {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .component-item {
+            background: rgba(166, 76, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 0.9em;
+            border: 1px solid rgba(166, 76, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .lifecycle-circle {
+                width: 350px;
+                height: 350px;
+            }
+            
+            .lifecycle-phase {
+                width: 100px;
+                height: 100px;
+                font-size: 0.8em;
+            }
+            
+            .phase-icon {
+                font-size: 1.5em;
+            }
+            
+            .center-logo {
+                width: 120px;
+                height: 120px;
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Threat Intelligence Lifecycle</h1>
+        <p class="subtitle">Цикл управления киберразведкой для проактивной защиты</p>
+        
+        <div class="lifecycle-circle">
+            <div class="lifecycle-phase phase-1">
+                <div class="phase-icon">📋</div>
+                <div class="phase-name">Direction & Planning</div>
+            </div>
+            <div class="lifecycle-phase phase-2">
+                <div class="phase-icon">🔍</div>
+                <div class="phase-name">Collection</div>
+            </div>
+            <div class="lifecycle-phase phase-3">
+                <div class="phase-icon">⚙️</div>
+                <div class="phase-name">Processing</div>
+            </div>
+            <div class="lifecycle-phase phase-4">
+                <div class="phase-icon">🧪</div>
+                <div class="phase-name">Analysis</div>
+            </div>
+            <div class="lifecycle-phase phase-5">
+                <div class="phase-icon">📢</div>
+                <div class="phase-name">Dissemination</div>
+            </div>
+            <div class="lifecycle-phase phase-6">
+                <div class="phase-icon">💬</div>
+                <div class="phase-name">Feedback</div>
+            </div>
+            <div class="center-logo">🛡️</div>
+        </div>
+        
+        <div class="phase-details">
+            <div class="detail-card phase-1">
+                <h3 class="detail-title"><span>📋</span> Direction & Planning</h3>
+                <div class="detail-content">
+                    <p>Определение требований и приоритетов для сбора разведданных</p>
+                    <ul class="detail-list">
+                        <li>Идентификация критических активов</li>
+                        <li>Определение угроз для бизнеса</li>
+                        <li>Установка приоритетов сбора</li>
+                        <li>Формирование PIR (Priority Intelligence Requirements)</li>
+                        <li>Выделение ресурсов и бюджета</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="detail-card phase-2">
+                <h3 class="detail-title"><span>🔍</span> Collection</h3>
+                <div class="detail-content">
+                    <p>Сбор данных из различных источников разведки</p>
+                    <ul class="detail-list">
+                        <li>OSINT - открытые источники</li>
+                        <li>HUMINT - человеческая разведка</li>
+                        <li>SIGINT - сигнальная разведка</li>
+                        <li>Dark Web мониторинг</li>
+                        <li>Threat feeds и sharing platforms</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="detail-card phase-3">
+                <h3 class="detail-title"><span>⚙️</span> Processing</h3>
+                <div class="detail-content">
+                    <p>Обработка и нормализация собранных данных</p>
+                    <ul class="detail-list">
+                        <li>Валидация источников</li>
+                        <li>Дедупликация информации</li>
+                        <li>Нормализация форматов</li>
+                        <li>Обогащение контекстом</li>
+                        <li>Структурирование данных</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="detail-card phase-4">
+                <h3 class="detail-title"><span>🧪</span> Analysis</h3>
+                <div class="detail-content">
+                    <p>Анализ и создание actionable intelligence</p>
+                    <ul class="detail-list">
+                        <li>Корреляция событий</li>
+                        <li>Атрибуция угроз</li>
+                        <li>TTP mapping (MITRE ATT&CK)</li>
+                        <li>Risk assessment</li>
+                        <li>Прогнозирование угроз</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="detail-card phase-5">
+                <h3 class="detail-title"><span>📢</span> Dissemination</h3>
+                <div class="detail-content">
+                    <p>Распространение разведданных заинтересованным сторонам</p>
+                    <ul class="detail-list">
+                        <li>Создание отчетов для руководства</li>
+                        <li>Технические IOC для SOC</li>
+                        <li>Threat bulletins</li>
+                        <li>STIX/TAXII sharing</li>
+                        <li>Интеграция с security tools</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="detail-card phase-6">
+                <h3 class="detail-title"><span>💬</span> Feedback</h3>
+                <div class="detail-content">
+                    <p>Оценка эффективности и улучшение процесса</p>
+                    <ul class="detail-list">
+                        <li>Метрики эффективности</li>
+                        <li>Обратная связь от stakeholders</li>
+                        <li>Lessons learned</li>
+                        <li>Корректировка приоритетов</li>
+                        <li>Улучшение процессов</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sources-section">
+            <h2 class="sources-title">📡 Collection Sources</h2>
+            <div class="sources-grid">
+                <div class="source-category">
+                    <div class="category-name"><span>🌐</span> OSINT Sources</div>
+                    <div class="source-item">Security blogs & research</div>
+                    <div class="source-item">Social media monitoring</div>
+                    <div class="source-item">Paste sites (Pastebin)</div>
+                    <div class="source-item">Public vulnerabilities (CVE)</div>
+                    <div class="source-item">DNS & Certificate data</div>
+                </div>
+                
+                <div class="source-category">
+                    <div class="category-name"><span>🌑</span> Dark Web</div>
+                    <div class="source-item">Underground forums</div>
+                    <div class="source-item">Marketplace monitoring</div>
+                    <div class="source-item">Leaked credentials</div>
+                    <div class="source-item">Threat actor communications</div>
+                    <div class="source-item">Exploit trading</div>
+                </div>
+                
+                <div class="source-category">
+                    <div class="category-name"><span>🤝</span> Commercial Feeds</div>
+                    <div class="source-item">Recorded Future</div>
+                    <div class="source-item">ThreatConnect</div>
+                    <div class="source-item">Anomali</div>
+                    <div class="source-item">Digital Shadows</div>
+                    <div class="source-item">Flashpoint</div>
+                </div>
+                
+                <div class="source-category">
+                    <div class="category-name"><span>🏛️</span> Government & ISACs</div>
+                    <div class="source-item">US-CERT/CISA</div>
+                    <div class="source-item">FBI Flash Alerts</div>
+                    <div class="source-item">FS-ISAC</div>
+                    <div class="source-item">H-ISAC</div>
+                    <div class="source-item">MS-ISAC</div>
+                </div>
+                
+                <div class="source-category">
+                    <div class="category-name"><span>🔧</span> Technical Sources</div>
+                    <div class="source-item">Honeypots & Honeynets</div>
+                    <div class="source-item">Malware sandboxes</div>
+                    <div class="source-item">Network telemetry</div>
+                    <div class="source-item">Endpoint detection</div>
+                    <div class="source-item">Email gateway logs</div>
+                </div>
+                
+                <div class="source-category">
+                    <div class="category-name"><span>👥</span> Community</div>
+                    <div class="source-item">MISP instances</div>
+                    <div class="source-item">AlienVault OTX</div>
+                    <div class="source-item">Threat sharing groups</div>
+                    <div class="source-item">Security conferences</div>
+                    <div class="source-item">Vendor research</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="platforms-comparison">
+            <h2 class="platforms-title">🛠️ TI Platform Comparison</h2>
+            <div class="platform-cards">
+                <div class="platform-card">
+                    <div class="platform-logo">🔮</div>
+                    <div class="platform-name">MISP</div>
+                    <ul class="platform-features">
+                        <li>Open-source platform</li>
+                        <li>Flexible data model</li>
+                        <li>Community sharing</li>
+                        <li>STIX/TAXII support</li>
+                        <li>Correlation engine</li>
+                        <li>API integration</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <div class="platform-logo">🎯</div>
+                    <div class="platform-name">ThreatConnect</div>
+                    <ul class="platform-features">
+                        <li>Enterprise TIP</li>
+                        <li>Playbook automation</li>
+                        <li>CAL™ analytics</li>
+                        <li>Threat intelligence ops</li>
+                        <li>Risk quantification</li>
+                        <li>Orchestration</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <div class="platform-logo">🌟</div>
+                    <div class="platform-name">Anomali ThreatStream</div>
+                    <ul class="platform-features">
+                        <li>Threat intelligence management</li>
+                        <li>Automated collection</li>
+                        <li>Risk scoring</li>
+                        <li>Integration hub</li>
+                        <li>Threat investigation</li>
+                        <li>Intelligence fusion</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <div class="platform-logo">📊</div>
+                    <div class="platform-name">Recorded Future</div>
+                    <ul class="platform-features">
+                        <li>Real-time threat intel</li>
+                        <li>Machine learning</li>
+                        <li>Risk scores</li>
+                        <li>Dark web monitoring</li>
+                        <li>Brand protection</li>
+                        <li>Third-party risk</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <div class="platform-logo">🔍</div>
+                    <div class="platform-name">CrowdStrike Falcon Intel</div>
+                    <ul class="platform-features">
+                        <li>Adversary intelligence</li>
+                        <li>Threat actor tracking</li>
+                        <li>Malware analysis</li>
+                        <li>Indicator management</li>
+                        <li>Custom reporting</li>
+                        <li>API access</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-card">
+                    <div class="platform-logo">🛡️</div>
+                    <div class="platform-name">IBM X-Force</div>
+                    <ul class="platform-features">
+                        <li>Threat research</li>
+                        <li>Vulnerability database</li>
+                        <li>Incident response</li>
+                        <li>Threat sharing</li>
+                        <li>Industry reports</li>
+                        <li>Premium intel</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="frameworks-section">
+            <h2 class="frameworks-title">🎯 CTI Frameworks</h2>
+            <div class="framework-grid">
+                <div class="framework-card">
+                    <h3 class="framework-name">💎 Diamond Model</h3>
+                    <p class="framework-desc">Модель для анализа кибератак через взаимосвязь четырех основных элементов</p>
+                    <div class="framework-components">
+                        <div class="component-item">Adversary</div>
+                        <div class="component-item">Capability</div>
+                        <div class="component-item">Infrastructure</div>
+                        <div class="component-item">Victim</div>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <h3 class="framework-name">⚔️ Cyber Kill Chain®</h3>
+                    <p class="framework-desc">7-ступенчатая модель описания этапов кибератаки от Lockheed Martin</p>
+                    <div class="framework-components">
+                        <div class="component-item">Reconnaissance</div>
+                        <div class="component-item">Weaponization</div>
+                        <div class="component-item">Delivery</div>
+                        <div class="component-item">Exploitation</div>
+                        <div class="component-item">Installation</div>
+                        <div class="component-item">C2</div>
+                        <div class="component-item">Actions</div>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <h3 class="framework-name">🎭 MITRE ATT&CK</h3>
+                    <p class="framework-desc">База знаний о тактиках и техниках злоумышленников</p>
+                    <div class="framework-components">
+                        <div class="component-item">14 Tactics</div>
+                        <div class="component-item">200+ Techniques</div>
+                        <div class="component-item">600+ Sub-techniques</div>
+                        <div class="component-item">130+ Groups</div>
+                    </div>
+                </div>
+                
+                <div class="framework-card">
+                    <h3 class="framework-name">📐 F3EAD</h3>
+                    <p class="framework-desc">Циклический процесс targeting операций</p>
+                    <div class="framework-components">
+                        <div class="component-item">Find</div>
+                        <div class="component-item">Fix</div>
+                        <div class="component-item">Finish</div>
+                        <div class="component-item">Exploit</div>
+                        <div class="component-item">Analyze</div>
+                        <div class="component-item">Disseminate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

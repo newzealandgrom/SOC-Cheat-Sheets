@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ransomware Response Playbook</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a0000 0%, #330000 50%, #000000 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff1744;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 23, 68, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ffcdd2;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .critical-banner {
+            background: rgba(255, 23, 68, 0.2);
+            border: 2px solid #ff1744;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.2em;
+            animation: blink 3s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { border-color: #ff1744; }
+            50% { border-color: #fff; }
+        }
+        
+        .timeline-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 23, 68, 0.3);
+        }
+        
+        .timeline-title {
+            font-size: 1.8em;
+            color: #ff1744;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #ff1744, #f44336, #ff1744);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding: 20px 0 20px 100px;
+            opacity: 0;
+            animation: slideIn 0.6s ease-out forwards;
+        }
+        
+        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
+        .timeline-item:nth-child(6) { animation-delay: 0.6s; }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: 35px;
+            top: 25px;
+            width: 30px;
+            height: 30px;
+            background: #ff1744;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 0 20px rgba(255, 23, 68, 0.5);
+        }
+        
+        .timeline-content {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 23, 68, 0.2);
+        }
+        
+        .timeline-time {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ff1744;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-actions {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        
+        .timeline-actions li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .timeline-actions li::before {
+            content: '▸';
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .decision-tree {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .tree-title {
+            font-size: 1.8em;
+            color: #ffc107;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .decision-node {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .decision-node:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .node-question {
+            border-color: #2196f3;
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05));
+        }
+        
+        .node-yes {
+            border-color: #4caf50;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+            margin-left: 40px;
+        }
+        
+        .node-no {
+            border-color: #f44336;
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
+            margin-left: 40px;
+        }
+        
+        .node-header {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .node-actions {
+            font-size: 0.95em;
+            color: #ffcdd2;
+        }
+        
+        .communication-plan {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 188, 212, 0.3);
+        }
+        
+        .comm-title {
+            font-size: 1.8em;
+            color: #00bcd4;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .comm-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .comm-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(0, 188, 212, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .comm-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .stakeholder {
+            font-weight: bold;
+            color: #00bcd4;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .comm-timeline {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 188, 212, 0.1);
+            border-radius: 5px;
+        }
+        
+        .comm-timeline-header {
+            font-weight: bold;
+            color: #00bcd4;
+            margin-bottom: 5px;
+        }
+        
+        .recovery-procedures {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .recovery-title {
+            font-size: 1.8em;
+            color: #4caf50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .recovery-phases {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .recovery-phase {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 25px;
+            border-left: 4px solid;
+        }
+        
+        .phase-1 { border-left-color: #f44336; }
+        .phase-2 { border-left-color: #ff9800; }
+        .phase-3 { border-left-color: #ffc107; }
+        .phase-4 { border-left-color: #4caf50; }
+        
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .phase-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .phase-1 .phase-number { background: #f44336; }
+        .phase-2 .phase-number { background: #ff9800; }
+        .phase-3 .phase-number { background: #ffc107; color: #000; }
+        .phase-4 .phase-number { background: #4caf50; }
+        
+        .phase-name {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .phase-checklist {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+        
+        .phase-checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .phase-checklist li::before {
+            content: '☐';
+            color: #4caf50;
+            font-size: 1.2em;
+            margin-top: -2px;
+        }
+        
+        .negotiation-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .negotiation-title {
+            font-size: 1.8em;
+            color: #9c27b0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .negotiation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .do-dont-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 25px;
+        }
+        
+        .do-card {
+            border: 2px solid #4caf50;
+        }
+        
+        .dont-card {
+            border: 2px solid #f44336;
+        }
+        
+        .do-dont-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .do-card .do-dont-title {
+            color: #4caf50;
+        }
+        
+        .dont-card .do-dont-title {
+            color: #f44336;
+        }
+        
+        .do-dont-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .do-dont-list li {
+            padding: 10px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .do-card .do-dont-list li::before {
+            content: '✓';
+            color: #4caf50;
+            font-size: 1.2em;
+        }
+        
+        .dont-card .do-dont-list li::before {
+            content: '✗';
+            color: #f44336;
+            font-size: 1.2em;
+        }
+        
+        .tools-resources {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.8em;
+            color: #2196f3;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tool-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .tool-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #2196f3;
+            margin-bottom: 10px;
+        }
+        
+        .tool-desc {
+            font-size: 0.9em;
+            color: #ffcdd2;
+        }
+        
+        @media (max-width: 768px) {
+            .negotiation-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comm-matrix {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 Ransomware Response Playbook</h1>
+        <p class="subtitle">Критический инцидент - действуйте быстро и методично</p>
+        
+        <div class="critical-banner">
+            ⚠️ RANSOMWARE DETECTED - ACTIVATE INCIDENT RESPONSE TEAM IMMEDIATELY ⚠️
+        </div>
+        
+        <div class="timeline-section">
+            <h2 class="timeline-title">⏱️ Critical Timeline - First 24 Hours</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker">1</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">T+0 to T+15 minutes</div>
+                        <ul class="timeline-actions">
+                            <li>Confirm ransomware infection (не false positive)</li>
+                            <li>Activate Incident Response Team</li>
+                            <li>Begin isolation procedures</li>
+                            <li>Document initial observations</li>
+                            <li>Notify SOC Manager and CISO</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-marker">2</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">T+15 to T+60 minutes</div>
+                        <ul class="timeline-actions">
+                            <li>Isolate affected systems from network</li>
+                            <li>Disconnect backup systems</li>
+                            <li>Identify patient zero</li>
+                            <li>Assess scope of encryption</li>
+                            <li>Preserve evidence (memory dumps, logs)</li>
+                            <li>Contact external IR team if needed</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-marker">3</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">T+1 to T+4 hours</div>
+                        <ul class="timeline-actions">
+                            <li>Complete network segmentation</li>
+                            <li>Identify ransomware variant</li>
+                            <li>Check for data exfiltration evidence</li>
+                            <li>Assess backup integrity</li>
+                            <li>Notify legal and compliance teams</li>
+                            <li>Prepare initial executive briefing</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-marker">4</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">T+4 to T+8 hours</div>
+                        <ul class="timeline-actions">
+                            <li>Complete impact assessment</li>
+                            <li>Evaluate recovery options</li>
+                            <li>Contact law enforcement (FBI/Local)</li>
+                            <li>Notify insurance carrier</li>
+                            <li>Begin recovery planning</li>
+                            <li>Coordinate with PR team</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-marker">5</div>
+                    <div class="timeline-content">
+                        <div class="timeline-time">T+8 to T+24 hours</div>
+                        <ul class="timeline-actions">
+                            <li>Execute recovery decision</li>
+                            <li>Begin restoration process</li>
+                            <li>Monitor for re-infection</li>
+                            <li>Update stakeholders</li>
+                            <li>Document lessons learned</li>
+                            <li>Plan for business continuity</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="decision-tree">
+            <h2 class="tree-title">🌳 Decision Tree</h2>
+            
+            <div class="decision-node node-question">
+                <div class="node-header">Are backups available and unencrypted?</div>
+            </div>
+            
+            <div class="decision-node node-yes">
+                <div class="node-header">YES ✓</div>
+                <div class="node-actions">
+                    • Verify backup integrity<br>
+                    • Plan restoration timeline<br>
+                    • Do NOT pay ransom<br>
+                    • Begin systematic recovery
+                </div>
+            </div>
+            
+            <div class="decision-node node-no">
+                <div class="node-header">NO ✗</div>
+                <div class="node-actions">
+                    • Assess business impact<br>
+                    • Consider negotiation options<br>
+                    • Consult with legal/insurance<br>
+                    • Evaluate data criticality
+                </div>
+            </div>
+            
+            <div class="decision-node node-question" style="margin-left: 80px;">
+                <div class="node-header">Is data exfiltration confirmed?</div>
+            </div>
+            
+            <div class="decision-node node-yes" style="margin-left: 120px;">
+                <div class="node-header">YES ✓</div>
+                <div class="node-actions">
+                    • Activate breach protocol<br>
+                    • Assess regulatory requirements<br>
+                    • Prepare notifications<br>
+                    • Consider double extortion
+                </div>
+            </div>
+            
+            <div class="decision-node node-no" style="margin-left: 120px;">
+                <div class="node-header">NO ✗</div>
+                <div class="node-actions">
+                    • Continue monitoring<br>
+                    • Check exfiltration indicators<br>
+                    • Analyze network logs<br>
+                    • Maintain evidence chain
+                </div>
+            </div>
+        </div>
+        
+        <div class="communication-plan">
+            <h2 class="comm-title">📢 Communication Plan</h2>
+            <div class="comm-matrix">
+                <div class="comm-card">
+                    <div class="stakeholder">👔 Executive Leadership</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Initial: T+30 minutes</div>
+                        <div>High-level impact, response status</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Updates: Every 2 hours</div>
+                        <div>Progress, decisions needed, recovery ETA</div>
+                    </div>
+                </div>
+                
+                <div class="comm-card">
+                    <div class="stakeholder">⚖️ Legal & Compliance</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Initial: T+1 hour</div>
+                        <div>Incident details, potential data exposure</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Ongoing: As needed</div>
+                        <div>Regulatory requirements, notification timelines</div>
+                    </div>
+                </div>
+                
+                <div class="comm-card">
+                    <div class="stakeholder">👮 Law Enforcement</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Initial: T+4 hours</div>
+                        <div>File report, share IOCs</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Follow-up: Daily</div>
+                        <div>Investigation support, evidence sharing</div>
+                    </div>
+                </div>
+                
+                <div class="comm-card">
+                    <div class="stakeholder">🏢 Insurance</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Initial: T+4 hours</div>
+                        <div>Claim notification, coverage confirmation</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Ongoing: Per policy</div>
+                        <div>Documentation, approved vendors</div>
+                    </div>
+                </div>
+                
+                <div class="comm-card">
+                    <div class="stakeholder">👥 Employees</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Initial: T+6 hours</div>
+                        <div>Awareness, instructions, support info</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Updates: Daily</div>
+                        <div>Status updates, return to normal ops</div>
+                    </div>
+                </div>
+                
+                <div class="comm-card">
+                    <div class="stakeholder">🌐 Public/Media</div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">If needed: T+24 hours</div>
+                        <div>Prepared statement, key messages</div>
+                    </div>
+                    <div class="comm-timeline">
+                        <div class="comm-timeline-header">Ongoing: As required</div>
+                        <div>Updates through official channels</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recovery-procedures">
+            <h2 class="recovery-title">🔄 Recovery Procedures</h2>
+            <div class="recovery-phases">
+                <div class="recovery-phase phase-1">
+                    <div class="phase-header">
+                        <div class="phase-number">1</div>
+                        <div class="phase-name">Containment & Eradication</div>
+                    </div>
+                    <ul class="phase-checklist">
+                        <li>Isolate all infected systems</li>
+                        <li>Identify and remove ransomware artifacts</li>
+                        <li>Reset all credentials (domain admin first)</li>
+                        <li>Patch exploited vulnerabilities</li>
+                        <li>Remove persistence mechanisms</li>
+                        <li>Validate clean systems before reconnection</li>
+                    </ul>
+                </div>
+                
+                <div class="recovery-phase phase-2">
+                    <div class="phase-header">
+                        <div class="phase-number">2</div>
+                        <div class="phase-name">Recovery Planning</div>
+                    </div>
+                    <ul class="phase-checklist">
+                        <li>Prioritize critical systems for recovery</li>
+                        <li>Validate backup integrity and age</li>
+                        <li>Plan recovery sequence</li>
+                        <li>Allocate recovery resources</li>
+                        <li>Establish success criteria</li>
+                        <li>Create rollback procedures</li>
+                    </ul>
+                </div>
+                
+                <div class="recovery-phase phase-3">
+                    <div class="phase-header">
+                        <div class="phase-number">3</div>
+                        <div class="phase-name">Restoration</div>
+                    </div>
+                    <ul class="phase-checklist">
+                        <li>Restore from clean backups</li>
+                        <li>Rebuild systems from known good images</li>
+                        <li>Apply all security patches</li>
+                        <li>Restore data in isolated environment first</li>
+                        <li>Validate functionality before production</li>
+                        <li>Monitor for re-infection indicators</li>
+                    </ul>
+                </div>
+                
+                <div class="recovery-phase phase-4">
+                    <div class="phase-header">
+                        <div class="phase-number">4</div>
+                        <div class="phase-name">Post-Recovery</div>
+                    </div>
+                    <ul class="phase-checklist">
+                        <li>Enhanced monitoring for 30 days</li>
+                        <li>Threat hunt for missed artifacts</li>
+                        <li>Update security controls</li>
+                        <li>Conduct lessons learned</li>
+                        <li>Update incident response plans</li>
+                        <li>Employee security awareness training</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="negotiation-section">
+            <h2 class="negotiation-title">💰 Negotiation Considerations</h2>
+            <div class="negotiation-grid">
+                <div class="do-dont-card do-card">
+                    <div class="do-dont-title"><span>✓</span> DO</div>
+                    <ul class="do-dont-list">
+                        <li>Consult with legal counsel first</li>
+                        <li>Verify decryption capability with proof</li>
+                        <li>Use experienced negotiators</li>
+                        <li>Document all communications</li>
+                        <li>Consider cyber insurance coverage</li>
+                        <li>Evaluate total business impact</li>
+                        <li>Maintain operational security</li>
+                    </ul>
+                </div>
+                
+                <div class="do-dont-card dont-card">
+                    <div class="do-dont-title"><span>✗</span> DON'T</div>
+                    <ul class="do-dont-list">
+                        <li>Pay without executive/legal approval</li>
+                        <li>Trust threat actors completely</li>
+                        <li>Negotiate without experience</li>
+                        <li>Violate sanctions regulations</li>
+                        <li>Delete any communications</li>
+                        <li>Rush the decision</li>
+                        <li>Forget about data exfiltration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-resources">
+            <h2 class="tools-title">🛠️ Tools & Resources</h2>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <div class="tool-icon">🔍</div>
+                    <div class="tool-name">ID Ransomware</div>
+                    <div class="tool-desc">Identify ransomware variant from ransom note or encrypted files</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔓</div>
+                    <div class="tool-name">No More Ransom</div>
+                    <div class="tool-desc">Free decryption tools for various ransomware families</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">💾</div>
+                    <div class="tool-name">KAPE</div>
+                    <div class="tool-desc">Forensic artifact collection tool</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🛡️</div>
+                    <div class="tool-name">RansomWhere</div>
+                    <div class="tool-desc">Monitor for ransomware IoCs</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">📊</div>
+                    <div class="tool-name">Volatility</div>
+                    <div class="tool-desc">Memory forensics framework</div>
+                </div>
+                
+                <div class="tool-card">
+                    <div class="tool-icon">🔐</div>
+                    <div class="tool-name">YARA Rules</div>
+                    <div class="tool-desc">Pattern matching for malware identification</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
