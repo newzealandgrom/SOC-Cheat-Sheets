@@ -26,6 +26,12 @@
 * [Процесс управления уязвимостями (Vulnerability Management Process)](vulnerability-management-process.html)
 * [Архитектура нулевого доверия (Zero Trust Architecture)](zero-trust-architecture.html)
 * [Malware Types & Analysis (Comprehensive guide to malicious software classification and detection)](malware-types-analysis.html)
+* [Digital Forensics Process Flow (Поэтапный процесс цифровой форензики для SOC аналитиков)](digital-forensics-process.html)
+* [Memory Forensics Artifacts Map (Карта артефактов в памяти Windows и Linux систем)](memory-forensics-artifacts.html)
+* [Browser Forensics Cheat Sheet (Артефакты браузеров и их расположение для форензик анализа)](browser-forensics-cheatsheet.html)
+* [Port Security Matrix (Матрица портов, протоколов и связанных угроз безопасности)](port-security-matrix.html)
+* [DDoS Attack Types & Mitigation (Типы DDoS атак по уровням OSI и методы защиты)](ddos-attack-mitigation.html)
+
 
 ## 🚀 Как использовать
 
