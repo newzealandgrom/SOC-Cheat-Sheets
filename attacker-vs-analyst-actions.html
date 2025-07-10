@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attacker Actions vs Analyst Response</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8b2d1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .attack-phases {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .phase-container {
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .phase-container:nth-child(1) { animation-delay: 0.1s; }
+        .phase-container:nth-child(2) { animation-delay: 0.2s; }
+        .phase-container:nth-child(3) { animation-delay: 0.3s; }
+        .phase-container:nth-child(4) { animation-delay: 0.4s; }
+        .phase-container:nth-child(5) { animation-delay: 0.5s; }
+        .phase-container:nth-child(6) { animation-delay: 0.6s; }
+        .phase-container:nth-child(7) { animation-delay: 0.7s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .phase-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .phase-number {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .phase-name {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .actions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .attacker-actions,
+        .analyst-actions {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid;
+        }
+        
+        .attacker-actions {
+            border-color: #ff4757;
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1), rgba(255, 71, 87, 0.05));
+        }
+        
+        .analyst-actions {
+            border-color: #00d2d3;
+            background: linear-gradient(135deg, rgba(0, 210, 211, 0.1), rgba(0, 210, 211, 0.05));
+        }
+        
+        .actions-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .attacker-actions .actions-title {
+            color: #ff4757;
+        }
+        
+        .analyst-actions .actions-title {
+            color: #00d2d3;
+        }
+        
+        .action-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .action-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .attacker-actions .action-item {
+            border-left-color: #ff4757;
+        }
+        
+        .analyst-actions .action-item {
+            border-left-color: #00d2d3;
+        }
+        
+        .action-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .action-technique {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .action-desc {
+            font-size: 0.9em;
+            color: #a8b2d1;
+            line-height: 1.5;
+        }
+        
+        .detection-indicators {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .indicators-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .indicator-card {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .indicator-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        .indicator-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .indicator-name {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .indicator-examples {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .example-item {
+            padding: 5px 0;
+            font-size: 0.9em;
+            color: #a8b2d1;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .example-item::before {
+            content: '▸';
+            color: #ffd700;
+            flex-shrink: 0;
+        }
+        
+        .tools-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.5em;
+            color: #00e676;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tool-category {
+            background: rgba(0, 230, 118, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #00e676;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .tool-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tool-item {
+            padding: 8px 0;
+            color: #a8b2d1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .tool-item:hover {
+            color: #00e676;
+            transform: translateX(5px);
+        }
+        
+        @media (max-width: 768px) {
+            .actions-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Attacker Actions vs Analyst Response</h1>
+        <p class="subtitle">Схема действий злоумышленника и соответствующих действий SOC аналитика</p>
+        
+        <div class="attack-phases">
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">1</div>
+                    <div class="phase-name">Reconnaissance (Разведка)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">OSINT Gathering</div>
+                                <div class="action-desc">Сбор информации из открытых источников: LinkedIn, сайт компании, GitHub</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Port Scanning</div>
+                                <div class="action-desc">Сканирование портов через Nmap, Masscan для выявления сервисов</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">DNS Enumeration</div>
+                                <div class="action-desc">Zone transfer попытки, subdomain брутфорс, DNS записи</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Email Harvesting</div>
+                                <div class="action-desc">Сбор email адресов для phishing через theHarvester, Hunter.io</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Мониторинг внешнего периметра</div>
+                                <div class="action-desc">Алерты на port scanning, многократные DNS запросы</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Threat Intelligence проверка</div>
+                                <div class="action-desc">Проверка IP сканеров в TI feeds, Shodan, GreyNoise</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Honeypot анализ</div>
+                                <div class="action-desc">Проверка активности на honeypot системах</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Блокировка источников</div>
+                                <div class="action-desc">Добавление подозрительных IP в blacklist на firewall</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">2</div>
+                    <div class="phase-name">Initial Access (Первичный доступ)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Phishing Email</div>
+                                <div class="action-desc">Отправка вредоносных вложений или ссылок сотрудникам</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Exploit Public-Facing Application</div>
+                                <div class="action-desc">Эксплуатация уязвимостей веб-приложений (SQL injection, RCE)</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Valid Accounts</div>
+                                <div class="action-desc">Использование украденных или подобранных учетных данных</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Supply Chain Compromise</div>
+                                <div class="action-desc">Атака через скомпрометированное ПО третьих сторон</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Email Gateway алерты</div>
+                                <div class="action-desc">Анализ подозрительных писем, sandbox detonation</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">WAF/IPS мониторинг</div>
+                                <div class="action-desc">Детекция попыток эксплуатации, аномальный трафик</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Authentication анализ</div>
+                                <div class="action-desc">Failed logons, brute-force попытки, unusual locations</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">EDR алерты</div>
+                                <div class="action-desc">Suspicious process creation, malware detection</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">3</div>
+                    <div class="phase-name">Execution (Выполнение кода)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">PowerShell/CMD</div>
+                                <div class="action-desc">Выполнение obfuscated скриптов, download cradles</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Scheduled Tasks</div>
+                                <div class="action-desc">Создание задач для persistence и выполнения payload</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">WMI Event Subscription</div>
+                                <div class="action-desc">Использование WMI для скрытого выполнения кода</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">DLL Side-Loading</div>
+                                <div class="action-desc">Загрузка вредоносных DLL через легитимные процессы</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Process monitoring</div>
+                                <div class="action-desc">Анализ command line arguments, parent-child relationships</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Script block logging</div>
+                                <div class="action-desc">Проверка PowerShell logs на подозрительные команды</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Scheduled tasks audit</div>
+                                <div class="action-desc">Event ID 4698, новые или измененные задачи</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Memory analysis</div>
+                                <div class="action-desc">Поиск injected code, process hollowing</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">4</div>
+                    <div class="phase-name">Persistence (Закрепление)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Registry Run Keys</div>
+                                <div class="action-desc">Добавление записей в HKLM\...\Run для автозапуска</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Service Creation</div>
+                                <div class="action-desc">Создание вредоносных Windows служб</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Account Creation</div>
+                                <div class="action-desc">Создание backdoor учетных записей</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Web Shell</div>
+                                <div class="action-desc">Размещение веб-шеллов на веб-серверах</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Registry monitoring</div>
+                                <div class="action-desc">Sysmon Event ID 13, изменения ключей автозапуска</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Service audit</div>
+                                <div class="action-desc">Event ID 4697, 7045 - новые службы</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Account monitoring</div>
+                                <div class="action-desc">Event ID 4720, 4722 - создание/включение учеток</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Web logs analysis</div>
+                                <div class="action-desc">POST запросы к новым файлам, аномальные URL</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">5</div>
+                    <div class="phase-name">Privilege Escalation (Повышение привилегий)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Credential Dumping</div>
+                                <div class="action-desc">Mimikatz, ProcDump для извлечения паролей из LSASS</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Token Impersonation</div>
+                                <div class="action-desc">Кража и использование токенов привилегированных процессов</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Kerberoasting</div>
+                                <div class="action-desc">Запрос service tickets для offline взлома</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">UAC Bypass</div>
+                                <div class="action-desc">Обход User Account Control через различные техники</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">LSASS access monitoring</div>
+                                <div class="action-desc">Sysmon Event ID 10, доступ к процессу lsass.exe</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Privilege use audit</div>
+                                <div class="action-desc">Event ID 4672, 4673 - использование привилегий</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Kerberos monitoring</div>
+                                <div class="action-desc">Event ID 4769 - TGS запросы с RC4 шифрованием</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Process integrity</div>
+                                <div class="action-desc">Процессы с high integrity от medium integrity parent</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">6</div>
+                    <div class="phase-name">Lateral Movement (Латеральное движение)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Pass-the-Hash</div>
+                                <div class="action-desc">Использование NTLM хешей для аутентификации</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">RDP/SMB Movement</div>
+                                <div class="action-desc">Перемещение через RDP сессии и SMB shares</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">WMI/PSExec</div>
+                                <div class="action-desc">Удаленное выполнение команд через WMI или PSExec</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Golden/Silver Ticket</div>
+                                <div class="action-desc">Создание поддельных Kerberos билетов</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Logon monitoring</div>
+                                <div class="action-desc">Event ID 4624 Type 3, 10 - сетевые и RDP входы</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Network connections</div>
+                                <div class="action-desc">Аномальные SMB/RDP соединения между системами</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Service creation</div>
+                                <div class="action-desc">Event ID 7045 на удаленных системах</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Ticket anomalies</div>
+                                <div class="action-desc">TGT с аномальным lifetime, encryption downgrade</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase-container">
+                <div class="phase-header">
+                    <div class="phase-number">7</div>
+                    <div class="phase-name">Exfiltration & Impact (Эксфильтрация и воздействие)</div>
+                </div>
+                <div class="actions-container">
+                    <div class="attacker-actions">
+                        <h3 class="actions-title">🎯 Действия атакующего</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Data Staging</div>
+                                <div class="action-desc">Сбор и архивирование данных перед отправкой</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">C2 Exfiltration</div>
+                                <div class="action-desc">Отправка данных через C2 каналы (HTTP/DNS)</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Ransomware Deployment</div>
+                                <div class="action-desc">Шифрование файлов и требование выкупа</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Data Destruction</div>
+                                <div class="action-desc">Удаление логов, shadow copies, backup</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="analyst-actions">
+                        <h3 class="actions-title">🛡️ Действия аналитика</h3>
+                        <ul class="action-list">
+                            <li class="action-item">
+                                <div class="action-technique">Data movement detection</div>
+                                <div class="action-desc">Большие файловые операции, архивирование</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Network monitoring</div>
+                                <div class="action-desc">Outbound traffic spikes, DNS tunneling</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">File system monitoring</div>
+                                <div class="action-desc">Mass file modifications, encryption indicators</div>
+                            </li>
+                            <li class="action-item">
+                                <div class="action-technique">Backup monitoring</div>
+                                <div class="action-desc">VSS deletion, backup corruption attempts</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detection-indicators">
+            <h2 class="indicators-title">🔍 Ключевые индикаторы для мониторинга</h2>
+            <div class="indicators-grid">
+                <div class="indicator-card">
+                    <div class="indicator-icon">🖥️</div>
+                    <div class="indicator-name">Process Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">PowerShell с encoded commands</li>
+                        <li class="example-item">Процессы из temp директорий</li>
+                        <li class="example-item">Unsigned executables</li>
+                        <li class="example-item">Процессы с network connections</li>
+                    </ul>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">🌐</div>
+                    <div class="indicator-name">Network Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">Beaconing behavior</li>
+                        <li class="example-item">DNS requests to new domains</li>
+                        <li class="example-item">Large data transfers</li>
+                        <li class="example-item">Non-standard ports usage</li>
+                    </ul>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">📁</div>
+                    <div class="indicator-name">File System Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">New files in startup folders</li>
+                        <li class="example-item">Modified system binaries</li>
+                        <li class="example-item">Suspicious scheduled tasks</li>
+                        <li class="example-item">Web shell patterns</li>
+                    </ul>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">🔐</div>
+                    <div class="indicator-name">Authentication Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">Failed logon spikes</li>
+                        <li class="example-item">Logons from new locations</li>
+                        <li class="example-item">Service account interactive logons</li>
+                        <li class="example-item">Pass-the-hash indicators</li>
+                    </ul>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">📊</div>
+                    <div class="indicator-name">Registry Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">Run key modifications</li>
+                        <li class="example-item">New services in registry</li>
+                        <li class="example-item">Debugger attachments</li>
+                        <li class="example-item">Security settings changes</li>
+                    </ul>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">💾</div>
+                    <div class="indicator-name">Memory Indicators</div>
+                    <ul class="indicator-examples">
+                        <li class="example-item">Process injection artifacts</li>
+                        <li class="example-item">Suspicious DLL loads</li>
+                        <li class="example-item">Modified process memory</li>
+                        <li class="example-item">Rootkit behaviors</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-section">
+            <h2 class="tools-title">🛠️ Инструменты для каждой фазы</h2>
+            <div class="tools-grid">
+                <div class="tool-category">
+                    <div class="category-name">🔍 Detection Tools</div>
+                    <ul class="tool-list">
+                        <li class="tool-item">SIEM (Splunk, QRadar, Sentinel)</li>
+                        <li class="tool-item">EDR (CrowdStrike, SentinelOne)</li>
+                        <li class="tool-item">Network TAP/SPAN monitoring</li>
+                        <li class="tool-item">Sysmon + WEF</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="category-name">📊 Analysis Tools</div>
+                    <ul class="tool-list">
+                        <li class="tool-item">Process Monitor/Explorer</li>
+                        <li class="tool-item">Wireshark/NetworkMiner</li>
+                        <li class="tool-item">Volatility for memory analysis</li>
+                        <li class="tool-item">YARA for pattern matching</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="category-name">🚨 Response Tools</div>
+                    <ul class="tool-list">
+                        <li class="tool-item">PowerShell remoting</li>
+                        <li class="tool-item">WMIC for remote queries</li>
+                        <li class="tool-item">OSQuery for live response</li>
+                        <li class="tool-item">Incident response scripts</li>
+                    </ul>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="category-name">🛡️ Prevention Tools</div>
+                    <ul class="tool-list">
+                        <li class="tool-item">Group Policy hardening</li>
+                        <li class="tool-item">AppLocker/WDAC</li>
+                        <li class="tool-item">MFA solutions</li>
+                        <li class="tool-item">PAM solutions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

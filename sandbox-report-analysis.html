@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandbox Report Analysis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #2d1b69 50%, #0f3460 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #e0e6ed;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .sandbox-platforms {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .platform-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: slideInUp 0.8s ease-out forwards;
+        }
+        
+        .platform-card:nth-child(1) { 
+            animation-delay: 0.1s;
+            border-color: #4285f4;
+        }
+        .platform-card:nth-child(2) { 
+            animation-delay: 0.2s;
+            border-color: #00d4ff;
+        }
+        .platform-card:nth-child(3) { 
+            animation-delay: 0.3s;
+            border-color: #ff6b6b;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .platform-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .platform-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .virustotal .platform-logo { background: #4285f4; }
+        .anyrun .platform-logo { background: #00d4ff; }
+        .hybrid .platform-logo { background: #ff6b6b; }
+        
+        .platform-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .platform-desc {
+            color: #b8c0cc;
+            margin-bottom: 20px;
+        }
+        
+        .analysis-sections {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .section-block {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .section-block:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(1.02);
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1em;
+        }
+        
+        .indicator-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .indicator-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #e0e6ed;
+        }
+        
+        .indicator-item::before {
+            content: '▸';
+            color: #00ff88;
+            flex-shrink: 0;
+        }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .severity-malicious { background: #ff1744; color: #fff; }
+        .severity-suspicious { background: #ffa502; color: #000; }
+        .severity-clean { background: #00e676; color: #000; }
+        
+        .key-indicators {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .indicators-title {
+            font-size: 1.8em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .indicator-card {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .indicator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+        
+        .indicator-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .indicator-name {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .indicator-details {
+            font-size: 0.9em;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .analysis-workflow {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+        
+        .workflow-title {
+            font-size: 1.8em;
+            color: #00e676;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .workflow-steps {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .workflow-step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: #00e676;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+            background: rgba(0, 230, 118, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #00e676;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .step-details {
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .common-patterns {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .patterns-title {
+            font-size: 1.8em;
+            color: #9c27b0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .pattern-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .pattern-category {
+            background: rgba(156, 39, 176, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #9c27b0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .pattern-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .pattern-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #9c27b0;
+            transition: all 0.3s ease;
+        }
+        
+        .pattern-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .tips-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .tips-title {
+            font-size: 1.8em;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .tip-card {
+            background: rgba(255, 107, 107, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .tip-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+        
+        .tip-text {
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .sandbox-platforms {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Sandbox Report Analysis</h1>
+        <p class="subtitle">Как читать и анализировать отчеты VirusTotal, Any.run, Hybrid Analysis</p>
+        
+        <div class="sandbox-platforms">
+            <div class="platform-card virustotal">
+                <div class="platform-header">
+                    <div class="platform-logo">VT</div>
+                    <div>
+                        <div class="platform-name">VirusTotal</div>
+                        <div class="platform-desc">Multi-engine AV scanning & static analysis</div>
+                    </div>
+                </div>
+                
+                <div class="analysis-sections">
+                    <div class="section-block">
+                        <h3 class="section-title">🔍 Detection Overview</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item">
+                                <strong>Detection Ratio:</strong> X/70+ engines
+                                <span class="severity-badge severity-malicious">>20 = Malicious</span>
+                            </li>
+                            <li class="indicator-item">
+                                <strong>Community Score:</strong> Votes и комментарии пользователей
+                            </li>
+                            <li class="indicator-item">
+                                <strong>First Submission:</strong> Когда впервые увидели sample
+                            </li>
+                            <li class="indicator-item">
+                                <strong>Last Analysis:</strong> Актуальность результатов
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">📊 Key Sections to Check</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item"><strong>Details Tab:</strong> File properties, PE info, signatures</li>
+                            <li class="indicator-item"><strong>Relations:</strong> Связанные файлы, URLs, IPs</li>
+                            <li class="indicator-item"><strong>Behavior:</strong> Sandbox execution (если есть)</li>
+                            <li class="indicator-item"><strong>Community:</strong> YARA rules, comments, votes</li>
+                            <li class="indicator-item"><strong>Submissions:</strong> История и источники</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">🎯 What to Look For</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item">Packed/Obfuscated indicators</li>
+                            <li class="indicator-item">Suspicious imports (VirtualAlloc, CreateRemoteThread)</li>
+                            <li class="indicator-item">Network indicators в Relations</li>
+                            <li class="indicator-item">Similar samples через Content tab</li>
+                            <li class="indicator-item">Dropped files и persistence mechanisms</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="platform-card anyrun">
+                <div class="platform-header">
+                    <div class="platform-logo">AR</div>
+                    <div>
+                        <div class="platform-name">ANY.RUN</div>
+                        <div class="platform-desc">Interactive online sandbox с real-time анализом</div>
+                    </div>
+                </div>
+                
+                <div class="analysis-sections">
+                    <div class="section-block">
+                        <h3 class="section-title">🖥️ Process Tree Analysis</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item"><strong>Parent-Child:</strong> Подозрительные spawn chains</li>
+                            <li class="indicator-item"><strong>Process Scores:</strong> Malicious/Suspicious маркировка</li>
+                            <li class="indicator-item"><strong>Injection:</strong> Process hollowing, injection indicators</li>
+                            <li class="indicator-item"><strong>Hidden Processes:</strong> Rootkit-like поведение</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">🌐 Network Activity</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item"><strong>HTTP Requests:</strong> C2 communication patterns</li>
+                            <li class="indicator-item"><strong>DNS Queries:</strong> DGA domains, suspicious lookups</li>
+                            <li class="indicator-item"><strong>Connections Map:</strong> Географическое распределение</li>
+                            <li class="indicator-item"><strong>PCAP Download:</strong> Для deep packet analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">💾 File & Registry Activity</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item">Dropped/Modified files с IOC тегами</li>
+                            <li class="indicator-item">Registry persistence (Run keys, services)</li>
+                            <li class="indicator-item">File timeline для понимания execution flow</li>
+                            <li class="indicator-item">Screenshots изменений на системе</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="platform-card hybrid">
+                <div class="platform-header">
+                    <div class="platform-logo">HA</div>
+                    <div>
+                        <div class="platform-name">Hybrid Analysis</div>
+                        <div class="platform-desc">Deep malware analysis platform by CrowdStrike</div>
+                    </div>
+                </div>
+                
+                <div class="analysis-sections">
+                    <div class="section-block">
+                        <h3 class="section-title">📈 Threat Score & Classification</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item"><strong>Threat Score:</strong> 0-100 (>70 = высокий риск)</li>
+                            <li class="indicator-item"><strong>AV Detection:</strong> Multi-engine результаты</li>
+                            <li class="indicator-item"><strong>Malware Family:</strong> Attribution если известно</li>
+                            <li class="indicator-item"><strong>Tags:</strong> ransomware, trojan, backdoor etc.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">🔬 Behavioral Indicators</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item"><strong>MITRE ATT&CK:</strong> Mapped techniques</li>
+                            <li class="indicator-item"><strong>Risk Indicators:</strong> Подозрительные действия</li>
+                            <li class="indicator-item"><strong>API Calls:</strong> Sequence и parameters</li>
+                            <li class="indicator-item"><strong>Mutex:</strong> Для обнаружения дубликатов</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section-block">
+                        <h3 class="section-title">📋 Extracted Artifacts</h3>
+                        <ul class="indicator-list">
+                            <li class="indicator-item">Strings extraction с контекстом</li>
+                            <li class="indicator-item">Memory dumps для анализа</li>
+                            <li class="indicator-item">Network IOCs с confidence levels</li>
+                            <li class="indicator-item">Unpacked payloads если обнаружены</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="key-indicators">
+            <h2 class="indicators-title">🎯 Ключевые индикаторы вредоносности</h2>
+            <div class="indicators-grid">
+                <div class="indicator-card">
+                    <div class="indicator-icon">🔐</div>
+                    <div class="indicator-name">Обфускация и упаковка</div>
+                    <div class="indicator-details">
+                        • Высокая энтропия секций<br>
+                        • Packed with UPX, Themida, VMProtect<br>
+                        • Obfuscated strings и API calls<br>
+                        • Anti-debugging/Anti-VM techniques
+                    </div>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">🌐</div>
+                    <div class="indicator-name">Сетевое поведение</div>
+                    <div class="indicator-details">
+                        • HTTP POST to suspicious domains<br>
+                        • Non-standard ports usage<br>
+                        • Beaconing behavior (periodic callbacks)<br>
+                        • DNS queries to DGA domains
+                    </div>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">💾</div>
+                    <div class="indicator-name">Системные изменения</div>
+                    <div class="indicator-details">
+                        • Autostart registry modifications<br>
+                        • Service creation<br>
+                        • Security software tampering<br>
+                        • Shadow copy deletion
+                    </div>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">⚡</div>
+                    <div class="indicator-name">Process поведение</div>
+                    <div class="indicator-details">
+                        • Process injection techniques<br>
+                        • Suspicious child processes<br>
+                        • Memory allocation patterns<br>
+                        • Token manipulation
+                    </div>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">📁</div>
+                    <div class="indicator-name">File операции</div>
+                    <div class="indicator-details">
+                        • Drops files in %TEMP%, %APPDATA%<br>
+                        • Mass file encryption (ransomware)<br>
+                        • Document enumeration<br>
+                        • Hidden file attributes
+                    </div>
+                </div>
+                
+                <div class="indicator-card">
+                    <div class="indicator-icon">🎭</div>
+                    <div class="indicator-name">Evasion техники</div>
+                    <div class="indicator-details">
+                        • Sleep/delay перед выполнением<br>
+                        • Geolocation/language checks<br>
+                        • Sandbox detection attempts<br>
+                        • Code injection в legit processes
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-workflow">
+            <h2 class="workflow-title">📋 Пошаговый анализ Sandbox отчетов</h2>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">Initial Assessment</div>
+                        <div class="step-details">
+                            • Проверить detection ratio и threat score<br>
+                            • Посмотреть malware family classification<br>
+                            • Оценить first seen date (новая угроза?)<br>
+                            • Проверить похожие samples
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Static Analysis Review</div>
+                        <div class="step-details">
+                            • File properties: size, hash, type<br>
+                            • PE headers и секции (для executables)<br>
+                            • Imports/Exports таблицы<br>
+                            • Strings и embedded resources
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Behavioral Analysis</div>
+                        <div class="step-details">
+                            • Process tree и execution flow<br>
+                            • Registry и file modifications<br>
+                            • Network connections и protocols<br>
+                            • API calls sequence
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">IOC Extraction</div>
+                        <div class="step-details">
+                            • Собрать file hashes (MD5, SHA256)<br>
+                            • Network IOCs: IPs, domains, URLs<br>
+                            • Registry keys и file paths<br>
+                            • Mutex names и service names
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Context & Attribution</div>
+                        <div class="step-details">
+                            • MITRE ATT&CK mapping<br>
+                            • Similar samples и campaigns<br>
+                            • Threat actor attribution если возможно<br>
+                            • Business impact assessment
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="workflow-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <div class="step-title">Reporting & Action</div>
+                        <div class="step-details">
+                            • Документировать findings<br>
+                            • Создать detection rules<br>
+                            • Block IOCs в security controls<br>
+                            • Share threat intelligence
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="common-patterns">
+            <h2 class="patterns-title">🎭 Распространенные паттерны малвари</h2>
+            <div class="pattern-categories">
+                <div class="pattern-category">
+                    <div class="category-name">🔒 Ransomware Indicators</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">Mass file enumeration и открытие</li>
+                        <li class="pattern-item">Crypto API calls (CryptEncrypt)</li>
+                        <li class="pattern-item">Shadow copy deletion (vssadmin, wmic)</li>
+                        <li class="pattern-item">Ransom note creation в multiple folders</li>
+                        <li class="pattern-item">File extension changes (.locked, .encrypted)</li>
+                    </ul>
+                </div>
+                
+                <div class="pattern-category">
+                    <div class="category-name">🕵️ InfoStealer Patterns</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">Browser data access (cookies, passwords)</li>
+                        <li class="pattern-item">Cryptocurrency wallet searches</li>
+                        <li class="pattern-item">Screenshot capabilities</li>
+                        <li class="pattern-item">Keylogging через SetWindowsHookEx</li>
+                        <li class="pattern-item">FTP/Email client credential theft</li>
+                    </ul>
+                </div>
+                
+                <div class="pattern-category">
+                    <div class="category-name">🚪 Backdoor/RAT Behavior</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">Persistence через registry/services</li>
+                        <li class="pattern-item">Regular beacon to C2</li>
+                        <li class="pattern-item">Remote command execution</li>
+                        <li class="pattern-item">File upload/download capabilities</li>
+                        <li class="pattern-item">Process/service manipulation</li>
+                    </ul>
+                </div>
+                
+                <div class="pattern-category">
+                    <div class="category-name">⛏️ Cryptominer Signs</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">High CPU usage patterns</li>
+                        <li class="pattern-item">Mining pool connections</li>
+                        <li class="pattern-item">Wallet addresses в strings</li>
+                        <li class="pattern-item">GPU detection routines</li>
+                        <li class="pattern-item">Process hiding techniques</li>
+                    </ul>
+                </div>
+                
+                <div class="pattern-category">
+                    <div class="category-name">🎣 Dropper/Downloader</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">Small initial file size</li>
+                        <li class="pattern-item">HTTP/HTTPS download activity</li>
+                        <li class="pattern-item">Drops executable в %TEMP%</li>
+                        <li class="pattern-item">Process spawning после download</li>
+                        <li class="pattern-item">Self-deletion после execution</li>
+                    </ul>
+                </div>
+                
+                <div class="pattern-category">
+                    <div class="category-name">🛡️ Banking Trojan</div>
+                    <ul class="pattern-list">
+                        <li class="pattern-item">Web injection capabilities</li>
+                        <li class="pattern-item">Browser hooks установка</li>
+                        <li class="pattern-item">Targets banking URLs</li>
+                        <li class="pattern-item">Form grabbing functionality</li>
+                        <li class="pattern-item">SMS/2FA bypass attempts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tips-section">
+            <h2 class="tips-title">💡 Pro Tips для анализа</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <span class="tip-icon">⏱️</span>
+                    <div class="tip-text">
+                        <strong>Timing Analysis:</strong> Обращайте внимание на delays и sleep вызовы - малварь часто ждет перед выполнением для обхода sandboxes
+                    </div>
+                </div>
+                
+                <div class="tip-card">
+                    <span class="tip-icon">🔗</span>
+                    <div class="tip-text">
+                        <strong>Cross-Reference:</strong> Используйте несколько sandbox платформ - разные окружения могут выявить разное поведение
+                    </div>
+                </div>
+                
+                <div class="tip-card">
+                    <span class="tip-icon">🎯</span>
+                    <div class="tip-text">
+                        <strong>Focus Points:</strong> Приоритет на network IOCs и persistence - это наиболее actionable для блокировки
+                    </div>
+                </div>
+                
+                <div class="tip-card">
+                    <span class="tip-icon">📝</span>
+                    <div class="tip-text">
+                        <strong>Documentation:</strong> Сохраняйте PDF отчеты и screenshots - sandbox результаты могут стать недоступны
+                    </div>
+                </div>
+                
+                <div class="tip-card">
+                    <span class="tip-icon">🔍</span>
+                    <div class="tip-text">
+                        <strong>Deep Dive:</strong> Скачивайте PCAP и memory dumps для углубленного анализа в своих инструментах
+                    </div>
+                </div>
+                
+                <div class="tip-card">
+                    <span class="tip-icon">⚠️</span>
+                    <div class="tip-text">
+                        <strong>False Positives:</strong> Legitimate software тоже может показывать подозрительное поведение - проверяйте контекст
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

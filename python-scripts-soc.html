@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Scripts for SOC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #61dafb;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(97, 218, 251, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #a8b2d1;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .scripts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .script-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(97, 218, 251, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .script-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(97, 218, 251, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .script-card:hover::before {
+            left: 100%;
+        }
+        
+        .script-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .script-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .script-icon {
+            font-size: 2em;
+        }
+        
+        .script-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #61dafb;
+        }
+        
+        .script-desc {
+            color: #a8b2d1;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .script-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag {
+            background: rgba(97, 218, 251, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #61dafb;
+            border: 1px solid rgba(97, 218, 251, 0.3);
+        }
+        
+        .code-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background: #1e1e1e;
+            margin: 50px auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 1000px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5em;
+            color: #61dafb;
+        }
+        
+        .close-btn {
+            font-size: 2em;
+            cursor: pointer;
+            color: #fff;
+            background: none;
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .code-container {
+            background: #282c34;
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .code-lang {
+            color: #61dafb;
+            font-weight: bold;
+        }
+        
+        .copy-btn {
+            background: rgba(97, 218, 251, 0.2);
+            border: 1px solid rgba(97, 218, 251, 0.3);
+            color: #61dafb;
+            padding: 5px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(97, 218, 251, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        pre {
+            margin: 0;
+            color: #abb2bf;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        /* Syntax highlighting */
+        .keyword { color: #c678dd; }
+        .string { color: #98c379; }
+        .comment { color: #5c6370; font-style: italic; }
+        .function { color: #61dafb; }
+        .number { color: #d19a66; }
+        .operator { color: #56b6c2; }
+        
+        .usage-section {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .usage-title {
+            color: #ffd93d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .requirements {
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .requirements-title {
+            color: #ffc107;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .requirements-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .requirements-list li {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .requirements-list li::before {
+            content: '📦';
+        }
+        
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .filter-btn.active {
+            background: rgba(97, 218, 251, 0.2);
+            border-color: rgba(97, 218, 251, 0.5);
+            color: #61dafb;
+        }
+        
+        @media (max-width: 768px) {
+            .scripts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐍 Python Scripts for SOC</h1>
+        <p class="subtitle">Готовые Python скрипты для автоматизации рутинных задач SOC аналитика</p>
+        
+        <div class="filter-section">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterScripts('all')">Все скрипты</button>
+                <button class="filter-btn" onclick="filterScripts('analysis')">Анализ</button>
+                <button class="filter-btn" onclick="filterScripts('parsing')">Парсинг</button>
+                <button class="filter-btn" onclick="filterScripts('network')">Сеть</button>
+                <button class="filter-btn" onclick="filterScripts('forensics')">Форензика</button>
+                <button class="filter-btn" onclick="filterScripts('automation')">Автоматизация</button>
+            </div>
+        </div>
+        
+        <div class="scripts-grid" id="scriptsGrid">
+            <div class="script-card" data-category="analysis" onclick="showScript('log_analyzer')">
+                <div class="script-header">
+                    <span class="script-icon">📊</span>
+                    <span class="script-title">Log Analyzer</span>
+                </div>
+                <div class="script-desc">Анализатор логов с поиском аномалий, подсчетом статистики и выявлением подозрительных IP-адресов</div>
+                <div class="script-tags">
+                    <span class="tag">pandas</span>
+                    <span class="tag">regex</span>
+                    <span class="tag">statistics</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="network" onclick="showScript('port_scanner')">
+                <div class="script-header">
+                    <span class="script-icon">🔍</span>
+                    <span class="script-title">Port Scanner</span>
+                </div>
+                <div class="script-desc">Быстрый сканер портов с многопоточностью для проверки доступности сервисов</div>
+                <div class="script-tags">
+                    <span class="tag">socket</span>
+                    <span class="tag">threading</span>
+                    <span class="tag">network</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="parsing" onclick="showScript('ioc_extractor')">
+                <div class="script-header">
+                    <span class="script-icon">🎯</span>
+                    <span class="script-title">IOC Extractor</span>
+                </div>
+                <div class="script-desc">Извлечение индикаторов компрометации (IP, URL, хеши, email) из текстовых файлов и логов</div>
+                <div class="script-tags">
+                    <span class="tag">regex</span>
+                    <span class="tag">ioc</span>
+                    <span class="tag">parsing</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="forensics" onclick="showScript('hash_calculator')">
+                <div class="script-header">
+                    <span class="script-icon">🔐</span>
+                    <span class="script-title">Hash Calculator</span>
+                </div>
+                <div class="script-desc">Расчет хешей файлов (MD5, SHA1, SHA256) для форензики и проверки целостности</div>
+                <div class="script-tags">
+                    <span class="tag">hashlib</span>
+                    <span class="tag">forensics</span>
+                    <span class="tag">integrity</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="automation" onclick="showScript('siem_api_client')">
+                <div class="script-header">
+                    <span class="script-icon">🤖</span>
+                    <span class="script-title">SIEM API Client</span>
+                </div>
+                <div class="script-desc">Клиент для работы с API популярных SIEM систем (Splunk, QRadar, Elasticsearch)</div>
+                <div class="script-tags">
+                    <span class="tag">api</span>
+                    <span class="tag">requests</span>
+                    <span class="tag">siem</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="analysis" onclick="showScript('threat_intel_checker')">
+                <div class="script-header">
+                    <span class="script-icon">🛡️</span>
+                    <span class="script-title">Threat Intel Checker</span>
+                </div>
+                <div class="script-desc">Проверка IP-адресов и доменов по базам Threat Intelligence (VirusTotal, AbuseIPDB)</div>
+                <div class="script-tags">
+                    <span class="tag">api</span>
+                    <span class="tag">threat-intel</span>
+                    <span class="tag">osint</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="parsing" onclick="showScript('pcap_parser')">
+                <div class="script-header">
+                    <span class="script-icon">📡</span>
+                    <span class="script-title">PCAP Parser</span>
+                </div>
+                <div class="script-desc">Анализ PCAP файлов с извлечением метаданных, статистики трафика и подозрительных соединений</div>
+                <div class="script-tags">
+                    <span class="tag">scapy</span>
+                    <span class="tag">pcap</span>
+                    <span class="tag">network</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="automation" onclick="showScript('incident_reporter')">
+                <div class="script-header">
+                    <span class="script-icon">📝</span>
+                    <span class="script-title">Incident Reporter</span>
+                </div>
+                <div class="script-desc">Автоматическая генерация отчетов об инцидентах с шаблонами и графиками</div>
+                <div class="script-tags">
+                    <span class="tag">jinja2</span>
+                    <span class="tag">matplotlib</span>
+                    <span class="tag">reporting</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="network" onclick="showScript('dns_resolver')">
+                <div class="script-header">
+                    <span class="script-icon">🌐</span>
+                    <span class="script-title">DNS Resolver</span>
+                </div>
+                <div class="script-desc">Массовое разрешение DNS с проверкой истории, reverse DNS и выявлением подозрительных доменов</div>
+                <div class="script-tags">
+                    <span class="tag">dns</span>
+                    <span class="tag">asyncio</span>
+                    <span class="tag">resolver</span>
+                </div>
+            </div>
+            
+            <div class="script-card" data-category="forensics" onclick="showScript('timeline_builder')">
+                <div class="script-header">
+                    <span class="script-icon">⏱️</span>
+                    <span class="script-title">Timeline Builder</span>
+                </div>
+                <div class="script-desc">Построение временной шкалы событий из различных источников логов для расследования инцидентов</div>
+                <div class="script-tags">
+                    <span class="tag">datetime</span>
+                    <span class="tag">visualization</span>
+                    <span class="tag">forensics</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for code display -->
+    <div id="codeModal" class="code-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Script Title</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="code-lang">Python 3.8+</span>
+                    <button class="copy-btn" onclick="copyCode()">📋 Копировать</button>
+                </div>
+                <pre id="codeContent"></pre>
+            </div>
+            
+            <div class="requirements">
+                <div class="requirements-title">📦 Требования:</div>
+                <ul class="requirements-list" id="requirementsList"></ul>
+            </div>
+            
+            <div class="usage-section">
+                <h3 class="usage-title">
+                    <span>💡</span>
+                    Использование:
+                </h3>
+                <div id="usageContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const scripts = {
+            log_analyzer: {
+                title: 'Log Analyzer',
+                requirements: ['pandas', 'matplotlib', 'seaborn', 'python-dateutil'],
+                usage: 'python log_analyzer.py --file access.log --output report.html',
+                code: `<span class="comment">#!/usr/bin/env python3</span>
+<span class="comment"># Log Analyzer - Анализатор логов для SOC</span>
+
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> re
+<span class="keyword">import</span> argparse
+<span class="keyword">from</span> collections <span class="keyword">import</span> Counter
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="keyword">class</span> <span class="function">LogAnalyzer</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="keyword">self</span>, log_file):
+        <span class="keyword">self</span>.log_file = log_file
+        <span class="keyword">self</span>.logs = []
+        <span class="keyword">self</span>.suspicious_ips = []
+        
+    <span class="keyword">def</span> <span class="function">parse_logs</span>(<span class="keyword">self</span>):
+        <span class="string">"""Парсинг логов Apache/Nginx"""</span>
+        log_pattern = re.compile(
+            r'(<span class="operator">?</span>P<span class="operator">&lt;</span>ip><span class="operator">\d+\.\d+\.\d+\.\d+</span>) - - \[(<span class="operator">?</span>P<span class="operator">&lt;</span>date>.*?)\] '
+            r'"(<span class="operator">?</span>P<span class="operator">&lt;</span>method>\w+) (<span class="operator">?</span>P<span class="operator">&lt;</span>url>.*?) .*?" '
+            r'(<span class="operator">?</span>P<span class="operator">&lt;</span>status>\d+) (<span class="operator">?</span>P<span class="operator">&lt;</span>size>\d+)'
+        )
+        
+        <span class="keyword">with</span> open(<span class="keyword">self</span>.log_file, <span class="string">'r'</span>) <span class="keyword">as</span> f:
+            <span class="keyword">for</span> line <span class="keyword">in</span> f:
+                match = log_pattern.match(line)
+                <span class="keyword">if</span> match:
+                    <span class="keyword">self</span>.logs.append(match.groupdict())
+                    
+    <span class="keyword">def</span> <span class="function">analyze_suspicious_activity</span>(<span class="keyword">self</span>):
+        <span class="string">"""Поиск подозрительной активности"""</span>
+        ip_counts = Counter([log[<span class="string">'ip'</span>] <span class="keyword">for</span> log <span class="keyword">in</span> <span class="keyword">self</span>.logs])
+        
+        <span class="comment"># IP с более чем 100 запросами за период</span>
+        <span class="keyword">self</span>.suspicious_ips = [
+            ip <span class="keyword">for</span> ip, count <span class="keyword">in</span> ip_counts.items() 
+            <span class="keyword">if</span> count > <span class="number">100</span>
+        ]
+        
+        <span class="comment"># Поиск SQL injection попыток</span>
+        sql_injection_patterns = [
+            <span class="string">r'union.*select'</span>,
+            <span class="string">r'or\s+1\s*=\s*1'</span>,
+            <span class="string">r'drop\s+table'</span>,
+            <span class="string">r'exec\s*\('</span>
+        ]
+        
+        <span class="keyword">for</span> log <span class="keyword">in</span> <span class="keyword">self</span>.logs:
+            url = log[<span class="string">'url'</span>].lower()
+            <span class="keyword">for</span> pattern <span class="keyword">in</span> sql_injection_patterns:
+                <span class="keyword">if</span> re.search(pattern, url):
+                    <span class="keyword">if</span> log[<span class="string">'ip'</span>] <span class="keyword">not in</span> <span class="keyword">self</span>.suspicious_ips:
+                        <span class="keyword">self</span>.suspicious_ips.append(log[<span class="string">'ip'</span>])
+                        
+    <span class="keyword">def</span> <span class="function">generate_report</span>(<span class="keyword">self</span>):
+        <span class="string">"""Генерация отчета"""</span>
+        df = pd.DataFrame(<span class="keyword">self</span>.logs)
+        
+        <span class="comment"># Статистика по кодам ответов</span>
+        status_counts = df[<span class="string">'status'</span>].value_counts()
+        
+        <span class="comment"># График распределения запросов по времени</span>
+        plt.figure(figsize=(<span class="number">12</span>, <span class="number">6</span>))
+        
+        plt.subplot(<span class="number">1</span>, <span class="number">2</span>, <span class="number">1</span>)
+        status_counts.plot(kind=<span class="string">'bar'</span>)
+        plt.title(<span class="string">'HTTP Status Codes Distribution'</span>)
+        plt.xlabel(<span class="string">'Status Code'</span>)
+        plt.ylabel(<span class="string">'Count'</span>)
+        
+        plt.subplot(<span class="number">1</span>, <span class="number">2</span>, <span class="number">2</span>)
+        ip_counts = df[<span class="string">'ip'</span>].value_counts().head(<span class="number">10</span>)
+        ip_counts.plot(kind=<span class="string">'barh'</span>)
+        plt.title(<span class="string">'Top 10 IP Addresses'</span>)
+        plt.xlabel(<span class="string">'Request Count'</span>)
+        
+        plt.tight_layout()
+        plt.savefig(<span class="string">'log_analysis_report.png'</span>)
+        
+        <span class="keyword">return</span> {
+            <span class="string">'total_requests'</span>: len(<span class="keyword">self</span>.logs),
+            <span class="string">'unique_ips'</span>: len(df[<span class="string">'ip'</span>].unique()),
+            <span class="string">'suspicious_ips'</span>: <span class="keyword">self</span>.suspicious_ips,
+            <span class="string">'status_distribution'</span>: status_counts.to_dict()
+        }
+
+<span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:
+    parser = argparse.ArgumentParser(description=<span class="string">'Analyze web server logs'</span>)
+    parser.add_argument(<span class="string">'--file'</span>, required=<span class="keyword">True</span>, help=<span class="string">'Log file path'</span>)
+    args = parser.parse_args()
+    
+    analyzer = LogAnalyzer(args.file)
+    analyzer.parse_logs()
+    analyzer.analyze_suspicious_activity()
+    report = analyzer.generate_report()
+    
+    print(<span class="string">f"\\n=== Log Analysis Report ==="</span>)
+    print(<span class="string">f"Total Requests: {report['total_requests']}"</span>)
+    print(<span class="string">f"Unique IPs: {report['unique_ips']}"</span>)
+    print(<span class="string">f"\\nSuspicious IPs detected: {len(report['suspicious_ips'])}"</span>)
+    <span class="keyword">for</span> ip <span class="keyword">in</span> report[<span class="string">'suspicious_ips'</span>]:
+        print(<span class="string">f"  - {ip}"</span>)`
+            },
+            
+            port_scanner: {
+                title: 'Port Scanner',
+                requirements: ['colorama', 'tqdm'],
+                usage: 'python port_scanner.py --host 192.168.1.1 --ports 1-1000 --threads 50',
+                code: `<span class="comment">#!/usr/bin/env python3</span>
+<span class="comment"># Port Scanner - Многопоточный сканер портов</span>
+
+<span class="keyword">import</span> socket
+<span class="keyword">import</span> threading
+<span class="keyword">import</span> argparse
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime
+<span class="keyword">from</span> queue <span class="keyword">import</span> Queue
+<span class="keyword">from</span> colorama <span class="keyword">import</span> init, Fore, Style
+<span class="keyword">from</span> tqdm <span class="keyword">import</span> tqdm
+
+init()  <span class="comment"># Инициализация colorama</span>
+
+<span class="keyword">class</span> <span class="function">PortScanner</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="keyword">self</span>, host, port_range, threads=<span class="number">50</span>):
+        <span class="keyword">self</span>.host = host
+        <span class="keyword">self</span>.port_range = port_range
+        <span class="keyword">self</span>.threads = threads
+        <span class="keyword">self</span>.open_ports = []
+        <span class="keyword">self</span>.queue = Queue()
+        
+        <span class="comment"># Словарь известных сервисов</span>
+        <span class="keyword">self</span>.known_ports = {
+            <span class="number">21</span>: <span class="string">'FTP'</span>,
+            <span class="number">22</span>: <span class="string">'SSH'</span>,
+            <span class="number">23</span>: <span class="string">'Telnet'</span>,
+            <span class="number">25</span>: <span class="string">'SMTP'</span>,
+            <span class="number">53</span>: <span class="string">'DNS'</span>,
+            <span class="number">80</span>: <span class="string">'HTTP'</span>,
+            <span class="number">110</span>: <span class="string">'POP3'</span>,
+            <span class="number">143</span>: <span class="string">'IMAP'</span>,
+            <span class="number">443</span>: <span class="string">'HTTPS'</span>,
+            <span class="number">445</span>: <span class="string">'SMB'</span>,
+            <span class="number">3389</span>: <span class="string">'RDP'</span>,
+            <span class="number">3306</span>: <span class="string">'MySQL'</span>,
+            <span class="number">5432</span>: <span class="string">'PostgreSQL'</span>,
+            <span class="number">8080</span>: <span class="string">'HTTP-Proxy'</span>
+        }
+        
+    <span class="keyword">def</span> <span class="function">scan_port</span>(<span class="keyword">self</span>, port):
+        <span class="string">"""Сканирование одного порта"""</span>
+        <span class="keyword">try</span>:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(<span class="number">1</span>)
+            result = sock.connect_ex((<span class="keyword">self</span>.host, port))
+            sock.close()
+            
+            <span class="keyword">if</span> result == <span class="number">0</span>:
+                service = <span class="keyword">self</span>.known_ports.get(port, <span class="string">'Unknown'</span>)
+                <span class="keyword">self</span>.open_ports.append((port, service))
+                <span class="keyword">return</span> <span class="keyword">True</span>
+        <span class="keyword">except</span> socket.gaierror:
+            print(<span class="string">f"{Fore.RED}Hostname {self.host} could not be resolved{Style.RESET_ALL}"</span>)
+        <span class="keyword">except</span> socket.error:
+            <span class="keyword">pass</span>
+        <span class="keyword">return</span> <span class="keyword">False</span>
+        
+    <span class="keyword">def</span> <span class="function">worker</span>(<span class="keyword">self</span>, pbar):
+        <span class="string">"""Worker thread для сканирования"""</span>
+        <span class="keyword">while</span> <span class="keyword">True</span>:
+            port = <span class="keyword">self</span>.queue.get()
+            <span class="keyword">if</span> port <span class="keyword">is</span> <span class="keyword">None</span>:
+                <span class="keyword">break</span>
+            
+            <span class="keyword">if</span> <span class="keyword">self</span>.scan_port(port):
+                service = <span class="keyword">self</span>.known_ports.get(port, <span class="string">'Unknown'</span>)
+                tqdm.write(<span class="string">f"{Fore.GREEN}[+] Port {port} ({service}) is open{Style.RESET_ALL}"</span>)
+            
+            pbar.update(<span class="number">1</span>)
+            <span class="keyword">self</span>.queue.task_done()
+            
+    <span class="keyword">def</span> <span class="function">run</span>(<span class="keyword">self</span>):
+        <span class="string">"""Запуск сканирования"""</span>
+        print(<span class="string">f"{Fore.CYAN}Starting port scan on {self.host}{Style.RESET_ALL}"</span>)
+        print(<span class="string">f"Port range: {self.port_range[0]}-{self.port_range[1]}"</span>)
+        print(<span class="string">f"Threads: {self.threads}\\n"</span>)
+        
+        start_time = datetime.now()
+        
+        <span class="comment"># Создание progress bar</span>
+        total_ports = <span class="keyword">self</span>.port_range[<span class="number">1</span>] - <span class="keyword">self</span>.port_range[<span class="number">0</span>] + <span class="number">1</span>
+        pbar = tqdm(total=total_ports, desc=<span class="string">"Scanning"</span>, unit=<span class="string">"port"</span>)
+        
+        <span class="comment"># Заполнение очереди портами</span>
+        <span class="keyword">for</span> port <span class="keyword">in</span> range(<span class="keyword">self</span>.port_range[<span class="number">0</span>], <span class="keyword">self</span>.port_range[<span class="number">1</span>] + <span class="number">1</span>):
+            <span class="keyword">self</span>.queue.put(port)
+            
+        <span class="comment"># Создание и запуск потоков</span>
+        threads = []
+        <span class="keyword">for</span> _ <span class="keyword">in</span> range(<span class="keyword">self</span>.threads):
+            t = threading.Thread(target=<span class="keyword">self</span>.worker, args=(pbar,))
+            t.daemon = <span class="keyword">True</span>
+            t.start()
+            threads.append(t)
+            
+        <span class="comment"># Ожидание завершения</span>
+        <span class="keyword">self</span>.queue.join()
+        
+        <span class="comment"># Остановка потоков</span>
+        <span class="keyword">for</span> _ <span class="keyword">in</span> range(<span class="keyword">self</span>.threads):
+            <span class="keyword">self</span>.queue.put(<span class="keyword">None</span>)
+        <span class="keyword">for</span> t <span class="keyword">in</span> threads:
+            t.join()
+            
+        pbar.close()
+        
+        end_time = datetime.now()
+        duration = end_time - start_time
+        
+        <span class="comment"># Вывод результатов</span>
+        print(<span class="string">f"\\n{Fore.YELLOW}Scan completed in {duration}{Style.RESET_ALL}"</span>)
+        print(<span class="string">f"\\n{Fore.CYAN}Open ports found: {len(self.open_ports)}{Style.RESET_ALL}"</span>)
+        
+        <span class="keyword">if</span> <span class="keyword">self</span>.open_ports:
+            print(<span class="string">f"\\n{'Port':<10} {'Service':<20} {'Risk Level'}"</span>)
+            print(<span class="string">"-"</span> * <span class="number">50</span>)
+            
+            <span class="keyword">for</span> port, service <span class="keyword">in</span> sorted(<span class="keyword">self</span>.open_ports):
+                risk = <span class="keyword">self</span>.assess_risk(port)
+                risk_color = {
+                    <span class="string">'HIGH'</span>: Fore.RED,
+                    <span class="string">'MEDIUM'</span>: Fore.YELLOW,
+                    <span class="string">'LOW'</span>: Fore.GREEN
+                }.get(risk, Fore.WHITE)
+                
+                print(<span class="string">f"{port:<10} {service:<20} {risk_color}{risk}{Style.RESET_ALL}"</span>)
+                
+    <span class="keyword">def</span> <span class="function">assess_risk</span>(<span class="keyword">self</span>, port):
+        <span class="string">"""Оценка риска для порта"""</span>
+        high_risk_ports = [<span class="number">23</span>, <span class="number">135</span>, <span class="number">139</span>, <span class="number">445</span>, <span class="number">1433</span>, <span class="number">3389</span>]
+        medium_risk_ports = [<span class="number">21</span>, <span class="number">22</span>, <span class="number">25</span>, <span class="number">110</span>, <span class="number">143</span>]
+        
+        <span class="keyword">if</span> port <span class="keyword">in</span> high_risk_ports:
+            <span class="keyword">return</span> <span class="string">'HIGH'</span>
+        <span class="keyword">elif</span> port <span class="keyword">in</span> medium_risk_ports:
+            <span class="keyword">return</span> <span class="string">'MEDIUM'</span>
+        <span class="keyword">else</span>:
+            <span class="keyword">return</span> <span class="string">'LOW'</span>
+
+<span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:
+    parser = argparse.ArgumentParser(description=<span class="string">'Fast port scanner'</span>)
+    parser.add_argument(<span class="string">'--host'</span>, required=<span class="keyword">True</span>, help=<span class="string">'Target host'</span>)
+    parser.add_argument(<span class="string">'--ports'</span>, default=<span class="string">'1-1000'</span>, help=<span class="string">'Port range (e.g., 1-1000)'</span>)
+    parser.add_argument(<span class="string">'--threads'</span>, type=int, default=<span class="number">50</span>, help=<span class="string">'Number of threads'</span>)
+    
+    args = parser.parse_args()
+    
+    <span class="comment"># Парсинг диапазона портов</span>
+    port_range = args.ports.split(<span class="string">'-'</span>)
+    port_range = (int(port_range[<span class="number">0</span>]), int(port_range[<span class="number">1</span>]))
+    
+    scanner = PortScanner(args.host, port_range, args.threads)
+    scanner.run()`
+            },
+            
+            ioc_extractor: {
+                title: 'IOC Extractor',
+                requirements: ['validators', 'tabulate'],
+                usage: 'python ioc_extractor.py --file malware_report.txt --output iocs.json',
+                code: `<span class="comment">#!/usr/bin/env python3</span>
+<span class="comment"># IOC Extractor - Извлечение индикаторов компрометации</span>
+
+<span class="keyword">import</span> re
+<span class="keyword">import</span> json
+<span class="keyword">import</span> argparse
+<span class="keyword">import</span> hashlib
+<span class="keyword">from</span> collections <span class="keyword">import</span> defaultdict
+<span class="keyword">from</span> tabulate <span class="keyword">import</span> tabulate
+<span class="keyword">import</span> validators
+
+<span class="keyword">class</span> <span class="function">IOCExtractor</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(<span class="keyword">self</span>):
+        <span class="keyword">self</span>.iocs = defaultdict(set)
+        
+        <span class="comment"># Регулярные выражения для различных IOC</span>
+        <span class="keyword">self</span>.patterns = {
+            <span class="string">'ipv4'</span>: re.compile(r'\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b'),
+            <span class="string">'ipv6'</span>: re.compile(r'\\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\\b'),
+            <span class="string">'domain'</span>: re.compile(r'\\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}\\b'),
+            <span class="string">'url'</span>: re.compile(r'https?://(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&//=]*)'),
+            <span class="string">'email'</span>: re.compile(r'\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b'),
+            <span class="string">'md5'</span>: re.compile(r'\\b[a-fA-F0-9]{32}\\b'),
+            <span class="string">'sha1'</span>: re.compile(r'\\b[a-fA-F0-9]{40}\\b'),
+            <span class="string">'sha256'</span>: re.compile(r'\\b[a-fA-F0-9]{64}\\b'),
+            <span class="string">'file_path'</span>: re.compile(r'(?:[A-Za-z]:\\\\|/)(?:[^\\\\/:*?"<>|\\r\\n]+[\\\\|/])*[^\\\\/:*?"<>|\\r\\n]*'),
+            <span class="string">'registry'</span>: re.compile(r'(?:HKEY_[A-Z_]+)(?:\\\\[^\\\\]+)+'),
+            <span class="string">'cve'</span>: re.compile(r'CVE-\\d{4}-\\d{4,}')
+        }
+        
+        <span class="comment"># Whitelist для исключения ложных срабатываний</span>
+        <span class="keyword">self</span>.whitelist = {
+            <span class="string">'ipv4'</span>: [<span class="string">'0.0.0.0'</span>, <span class="string">'127.0.0.1'</span>, <span class="string">'255.255.255.255'</span>],
+            <span class="string">'domain'</span>: [<span class="string">'localhost'</span>, <span class="string">'example.com'</span>, <span class="string">'test.com'</span>],
+            <span class="string">'email'</span>: [<span class="string">'admin@example.com'</span>, <span class="string">'test@test.com'</span>]
+        }
+        
+    <span class="keyword">def</span> <span class="function">extract_from_text</span>(<span class="keyword">self</span>, text):
+        <span class="string">"""Извлечение IOC из текста"""</span>
+        <span class="keyword">for</span> ioc_type, pattern <span class="keyword">in</span> <span class="keyword">self</span>.patterns.items():
+            matches = pattern.findall(text)
+            
+            <span class="keyword">for</span> match <span class="keyword">in</span> matches:
+                <span class="comment"># Проверка на whitelist</span>
+                <span class="keyword">if</span> ioc_type <span class="keyword">in</span> <span class="keyword">self</span>.whitelist:
+                    <span class="keyword">if</span> match.lower() <span class="keyword">in</span> [item.lower() <span class="keyword">for</span> item <span class="keyword">in</span> <span class="keyword">self</span>.whitelist[ioc_type]]:
+                        <span class="keyword">continue</span>
+                        
+                <span class="comment"># Дополнительная валидация</span>
+                <span class="keyword">if</span> <span class="keyword">self</span>.validate_ioc(ioc_type, match):
+                    <span class="keyword">self</span>.iocs[ioc_type].add(match.lower())
+                    
+    <span class="keyword">def</span> <span class="function">validate_ioc</span>(<span class="keyword">self</span>, ioc_type, value):
+        <span class="string">"""Дополнительная валидация IOC"""</span>
+        <span class="keyword">if</span> ioc_type == <span class="string">'ipv4'</span>:
+            <span class="comment"># Проверка на валидность IP</span>
+            parts = value.split(<span class="string">'.'</span>)
+            <span class="keyword">if</span> len(parts) == <span class="number">4</span>:
+                <span class="keyword">try</span>:
+                    <span class="keyword">return</span> all(<span class="number">0</span> <= int(part) <= <span class="number">255</span> <span class="keyword">for</span> part <span class="keyword">in</span> parts)
+                <span class="keyword">except</span> ValueError:
+                    <span class="keyword">return</span> <span class="keyword">False</span>
+                    
+        <span class="keyword">elif</span> ioc_type == <span class="string">'domain'</span>:
+            <span class="comment"># Исключение IP-адресов из доменов</span>
+            <span class="keyword">if</span> re.match(r'^\\d+\\.\\d+\\.\\d+\\.\\d+$', value):
+                <span class="keyword">return</span> <span class="keyword">False</span>
+            <span class="keyword">return</span> validators.domain(value)
+            
+        <span class="keyword">elif</span> ioc_type == <span class="string">'url'</span>:
+            <span class="keyword">return</span> validators.url(value)
+            
+        <span class="keyword">elif</span> ioc_type == <span class="string">'email'</span>:
+            <span class="keyword">return</span> validators.email(value)
+            
+        <span class="keyword">return</span> <span class="keyword">True</span>
+        
+    <span class="keyword">def</span> <span class="function">defang_iocs</span>(<span class="keyword">self</span>):
+        <span class="string">"""Обезвреживание IOC для безопасного обмена"""</span>
+        defanged = {}
+        
+        <span class="keyword">for</span> ioc_type, values <span class="keyword">in</span> <span class="keyword">self</span>.iocs.items():
+            defanged[ioc_type] = []
+            
+            <span class="keyword">for</span> value <span class="keyword">in</span> values:
+                <span class="keyword">if</span> ioc_type == <span class="string">'ipv4'</span>:
+                    defanged_value = value.replace(<span class="string">'.'</span>, <span class="string">'[.]'</span>)
+                <span class="keyword">elif</span> ioc_type == <span class="string">'url'</span>:
+                    defanged_value = value.replace(<span class="string">'http'</span>, <span class="string">'hxxp'</span>).replace(<span class="string">'.'</span>, <span class="string">'[.]'</span>)
+                <span class="keyword">elif</span> ioc_type == <span class="string">'domain'</span>:
+                    defanged_value = value.replace(<span class="string">'.'</span>, <span class="string">'[.]'</span>)
+                <span class="keyword">elif</span> ioc_type == <span class="string">'email'</span>:
+                    defanged_value = value.replace(<span class="string">'@'</span>, <span class="string">'[@]'</span>).replace(<span class="string">'.'</span>, <span class="string">'[.]'</span>)
+                <span class="keyword">else</span>:
+                    defanged_value = value
+                    
+                defanged[ioc_type].append({
+                    <span class="string">'value'</span>: value,
+                    <span class="string">'defanged'</span>: defanged_value
+                })
+                
+        <span class="keyword">return</span> defanged
+        
+    <span class="keyword">def</span> <span class="function">get_statistics</span>(<span class="keyword">self</span>):
+        <span class="string">"""Получение статистики по IOC"""</span>
+        stats = []
+        <span class="keyword">for</span> ioc_type, values <span class="keyword">in</span> <span class="keyword">self</span>.iocs.items():
+            stats.append([ioc_type.upper(), len(values)])
+        <span class="keyword">return</span> stats
+        
+    <span class="keyword">def</span> <span class="function">export_json</span>(<span class="keyword">self</span>, filename):
+        <span class="string">"""Экспорт IOC в JSON"""</span>
+        output = {
+            <span class="string">'statistics'</span>: dict(<span class="keyword">self</span>.get_statistics()),
+            <span class="string">'iocs'</span>: {}
+        }
+        
+        <span class="keyword">for</span> ioc_type, values <span class="keyword">in</span> <span class="keyword">self</span>.iocs.items():
+            output[<span class="string">'iocs'</span>][ioc_type] = list(values)
+            
+        <span class="keyword">with</span> open(filename, <span class="string">'w'</span>) <span class="keyword">as</span> f:
+            json.dump(output, f, indent=<span class="number">4</span>)
+            
+    <span class="keyword">def</span> <span class="function">export_csv</span>(<span class="keyword">self</span>, filename):
+        <span class="string">"""Экспорт IOC в CSV"""</span>
+        <span class="keyword">import</span> csv
+        
+        <span class="keyword">with</span> open(filename, <span class="string">'w'</span>, newline=<span class="string">''</span>) <span class="keyword">as</span> f:
+            writer = csv.writer(f)
+            writer.writerow([<span class="string">'Type'</span>, <span class="string">'Value'</span>, <span class="string">'Defanged'</span>])
+            
+            defanged = <span class="keyword">self</span>.defang_iocs()
+            <span class="keyword">for</span> ioc_type, items <span class="keyword">in</span> defanged.items():
+                <span class="keyword">for</span> item <span class="keyword">in</span> items:
+                    writer.writerow([ioc_type, item[<span class="string">'value'</span>], item[<span class="string">'defanged'</span>]])
+
+<span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:
+    parser = argparse.ArgumentParser(description=<span class="string">'Extract IOCs from text files'</span>)
+    parser.add_argument(<span class="string">'--file'</span>, required=<span class="keyword">True</span>, help=<span class="string">'Input file'</span>)
+    parser.add_argument(<span class="string">'--output'</span>, default=<span class="string">'iocs.json'</span>, help=<span class="string">'Output file'</span>)
+    parser.add_argument(<span class="string">'--format'</span>, choices=[<span class="string">'json'</span>, <span class="string">'csv'</span>], default=<span class="string">'json'</span>)
+    parser.add_argument(<span class="string">'--defang'</span>, action=<span class="string">'store_true'</span>, help=<span class="string">'Defang IOCs'</span>)
+    
+    args = parser.parse_args()
+    
+    extractor = IOCExtractor()
+    
+    <span class="comment"># Чтение файла</span>
+    <span class="keyword">with</span> open(args.file, <span class="string">'r'</span>, encoding=<span class="string">'utf-8'</span>) <span class="keyword">as</span> f:
+        text = f.read()
+        
+    extractor.extract_from_text(text)
+    
+    <span class="comment"># Вывод статистики</span>
+    print(<span class="string">"\\n=== IOC Extraction Results ==="</span>)
+    print(tabulate(extractor.get_statistics(), headers=[<span class="string">'Type'</span>, <span class="string">'Count'</span>]))
+    
+    <span class="comment"># Экспорт результатов</span>
+    <span class="keyword">if</span> args.format == <span class="string">'json'</span>:
+        extractor.export_json(args.output)
+    <span class="keyword">else</span>:
+        extractor.export_csv(args.output)
+        
+    print(<span class="string">f"\\nResults exported to {args.output}"</span>)
+    
+    <span class="comment"># Вывод примеров</span>
+    <span class="keyword">if</span> args.defang:
+        print(<span class="string">"\\n=== Sample Defanged IOCs ==="</span>)
+        defanged = extractor.defang_iocs()
+        <span class="keyword">for</span> ioc_type, items <span class="keyword">in</span> list(defanged.items())[:<span class="number">3</span>]:
+            print(<span class="string">f"\\n{ioc_type.upper()}:"</span>)
+            <span class="keyword">for</span> item <span class="keyword">in</span> items[:<span class="number">3</span>]:
+                print(<span class="string">f"  {item['defanged']}"</span>)`
+            }
+        };
+        
+        function showScript(scriptId) {
+            const script = scripts[scriptId];
+            if (!script) return;
+            
+            document.getElementById('modalTitle').textContent = script.title;
+            document.getElementById('codeContent').innerHTML = script.code;
+            
+            // Requirements
+            const reqList = document.getElementById('requirementsList');
+            reqList.innerHTML = '';
+            script.requirements.forEach(req => {
+                const li = document.createElement('li');
+                li.textContent = req;
+                reqList.appendChild(li);
+            });
+            
+            // Usage
+            document.getElementById('usageContent').textContent = script.usage;
+            
+            document.getElementById('codeModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('codeModal').style.display = 'none';
+        }
+        
+        function copyCode() {
+            const codeText = document.getElementById('codeContent').textContent;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+        
+        function filterScripts(category) {
+            const cards = document.querySelectorAll('.script-card');
+            const btns = document.querySelectorAll('.filter-btn');
+            
+            // Update active button
+            btns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Filter cards
+            cards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('codeModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

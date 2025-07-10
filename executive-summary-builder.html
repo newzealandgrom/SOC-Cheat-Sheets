@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Summary Builder</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b8d4e3;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .builder-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .builder-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #64b5f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .template-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border-color: #64b5f6;
+        }
+        
+        .template-card.active {
+            background: rgba(100, 181, 246, 0.2);
+            border-color: #64b5f6;
+        }
+        
+        .template-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .template-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .template-desc {
+            font-size: 0.85em;
+            color: #b8d4e3;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #64b5f6;
+            font-weight: bold;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #64b5f6;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        textarea.input-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .severity-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .severity-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .severity-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .severity-critical {
+            border-color: #ff1744;
+            background: rgba(255, 23, 68, 0.2);
+        }
+        
+        .severity-high {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        .severity-medium {
+            border-color: #ffa502;
+            background: rgba(255, 165, 2, 0.2);
+        }
+        
+        .severity-low {
+            border-color: #00e676;
+            background: rgba(0, 230, 118, 0.2);
+        }
+        
+        .preview-section {
+            background: #fff;
+            color: #333;
+            border-radius: 10px;
+            padding: 30px;
+            min-height: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .preview-header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-title {
+            font-size: 1.8em;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+        
+        .preview-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .preview-content {
+            line-height: 1.6;
+        }
+        
+        .preview-section h3 {
+            color: #2a5298;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #64b5f6;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background: #42a5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(100, 181, 246, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #64b5f6;
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            color: #b8d4e3;
+            margin-top: 5px;
+        }
+        
+        .timeline-container {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .timeline-time {
+            min-width: 100px;
+            text-align: right;
+            color: #64b5f6;
+            font-weight: bold;
+        }
+        
+        .timeline-event {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 3px solid #64b5f6;
+        }
+        
+        .tips-section {
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .tips-title {
+            color: #ffc107;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .tips-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .tips-list li::before {
+            content: '💡';
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 968px) {
+            .builder-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Executive Summary Builder</h1>
+        <p class="subtitle">Конструктор отчетов для руководства - быстро и профессионально</p>
+        
+        <div class="builder-grid">
+            <div class="builder-section">
+                <h2 class="section-title">
+                    <span>📝</span>
+                    Конструктор отчета
+                </h2>
+                
+                <div class="template-selector">
+                    <div class="template-card active" onclick="selectTemplate('incident')">
+                        <div class="template-icon">🚨</div>
+                        <div class="template-name">Инцидент ИБ</div>
+                        <div class="template-desc">Критический инцидент</div>
+                    </div>
+                    <div class="template-card" onclick="selectTemplate('monthly')">
+                        <div class="template-icon">📅</div>
+                        <div class="template-name">Месячный отчет</div>
+                        <div class="template-desc">Статистика за месяц</div>
+                    </div>
+                    <div class="template-card" onclick="selectTemplate('threat')">
+                        <div class="template-icon">🎯</div>
+                        <div class="template-name">Анализ угроз</div>
+                        <div class="template-desc">Новые угрозы</div>
+                    </div>
+                    <div class="template-card" onclick="selectTemplate('vulnerability')">
+                        <div class="template-icon">🔍</div>
+                        <div class="template-name">Уязвимости</div>
+                        <div class="template-desc">Отчет по VA</div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Заголовок отчета</label>
+                    <input type="text" class="input-field" id="reportTitle" placeholder="Например: Критический инцидент - Ransomware атака" value="Критический инцидент безопасности - Попытка несанкционированного доступа">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Краткое описание (Executive Summary)</label>
+                    <textarea class="input-field" id="executiveSummary" placeholder="Краткое описание для руководства...">24 января 2025 года в 14:35 MSK системой мониторинга SOC были обнаружены множественные попытки несанкционированного доступа к критическим серверам компании. Атака была успешно отражена, утечки данных не произошло.</textarea>
+                </div>
+                
+                <label class="input-label">Уровень критичности</label>
+                <div class="severity-selector">
+                    <button class="severity-btn severity-critical" onclick="selectSeverity('critical')">Критический</button>
+                    <button class="severity-btn severity-high" onclick="selectSeverity('high')">Высокий</button>
+                    <button class="severity-btn severity-medium" onclick="selectSeverity('medium')">Средний</button>
+                    <button class="severity-btn severity-low" onclick="selectSeverity('low')">Низкий</button>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <input type="number" class="input-field" style="text-align: center;" value="127" id="affectedSystems">
+                        <div class="metric-label">Затронуто систем</div>
+                    </div>
+                    <div class="metric-card">
+                        <input type="number" class="input-field" style="text-align: center;" value="3" id="affectedUsers">
+                        <div class="metric-label">Затронуто пользователей</div>
+                    </div>
+                    <div class="metric-card">
+                        <input type="text" class="input-field" style="text-align: center;" value="45 мин" id="responseTime">
+                        <div class="metric-label">Время реагирования</div>
+                    </div>
+                    <div class="metric-card">
+                        <input type="text" class="input-field" style="text-align: center;" value="0 ₽" id="estimatedLoss">
+                        <div class="metric-label">Ущерб</div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Ключевые действия</label>
+                    <textarea class="input-field" id="keyActions" placeholder="Перечислите основные действия...">1. Изоляция затронутых систем
+2. Анализ логов и выявление источника атаки
+3. Блокировка вредоносных IP-адресов
+4. Усиление мониторинга критических систем
+5. Обновление правил IPS/IDS</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Рекомендации</label>
+                    <textarea class="input-field" id="recommendations" placeholder="Рекомендации для предотвращения...">1. Внедрить двухфакторную аутентификацию для всех критических систем
+2. Провести обучение персонала по кибербезопасности
+3. Обновить системы до последних версий
+4. Провести пентест внешнего периметра</textarea>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="generatePreview()">
+                        <span>👁️</span>
+                        Предпросмотр
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportReport()">
+                        <span>📥</span>
+                        Экспорт в Word
+                    </button>
+                    <button class="btn btn-secondary" onclick="copyToClipboard()">
+                        <span>📋</span>
+                        Копировать
+                    </button>
+                </div>
+            </div>
+            
+            <div class="builder-section">
+                <h2 class="section-title">
+                    <span>👁️</span>
+                    Предпросмотр отчета
+                </h2>
+                
+                <div class="preview-section" id="reportPreview">
+                    <div class="preview-header">
+                        <h2 class="preview-title" id="previewTitle">Критический инцидент безопасности - Попытка несанкционированного доступа</h2>
+                        <div class="preview-meta">
+                            <span>📅 24 января 2025</span>
+                            <span>🔴 Критический</span>
+                            <span>👤 SOC Team</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-content">
+                        <h3>Краткое описание для руководства</h3>
+                        <p id="previewSummary">24 января 2025 года в 14:35 MSK системой мониторинга SOC были обнаружены множественные попытки несанкционированного доступа к критическим серверам компании. Атака была успешно отражена, утечки данных не произошло.</p>
+                        
+                        <h3>Ключевые показатели</h3>
+                        <ul>
+                            <li><strong>Затронутые системы:</strong> <span id="previewSystems">127</span></li>
+                            <li><strong>Затронутые пользователи:</strong> <span id="previewUsers">3</span></li>
+                            <li><strong>Время реагирования:</strong> <span id="previewResponse">45 мин</span></li>
+                            <li><strong>Оценочный ущерб:</strong> <span id="previewLoss">0 ₽</span></li>
+                        </ul>
+                        
+                        <h3>Предпринятые действия</h3>
+                        <p id="previewActions">1. Изоляция затронутых систем<br>
+2. Анализ логов и выявление источника атаки<br>
+3. Блокировка вредоносных IP-адресов<br>
+4. Усиление мониторинга критических систем<br>
+5. Обновление правил IPS/IDS</p>
+                        
+                        <h3>Рекомендации</h3>
+                        <p id="previewRecommendations">1. Внедрить двухфакторную аутентификацию для всех критических систем<br>
+2. Провести обучение персонала по кибербезопасности<br>
+3. Обновить системы до последних версий<br>
+4. Провести пентест внешнего периметра</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tips-section">
+            <h3 class="tips-title">
+                <span>💡</span>
+                Советы по составлению Executive Summary
+            </h3>
+            <ul class="tips-list">
+                <li>Используйте простой язык без технического жаргона - руководство должно понимать суть без погружения в детали</li>
+                <li>Начинайте с самого важного - что произошло, когда и какие последствия</li>
+                <li>Всегда указывайте бизнес-влияние: финансовые потери, репутационные риски, простой систем</li>
+                <li>Фокусируйтесь на действиях и результатах, а не на технических деталях</li>
+                <li>Обязательно включайте четкие рекомендации с приоритетами и сроками</li>
+                <li>Используйте визуализацию: графики, диаграммы, временные шкалы</li>
+                <li>Ограничивайте отчет 1-2 страницами для топ-менеджмента</li>
+            </ul>
+        </div>
+        
+        <div class="builder-section" style="margin-top: 30px;">
+            <h2 class="section-title">
+                <span>⏱️</span>
+                Хронология событий
+            </h2>
+            <div class="timeline-container" id="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-time">14:35</div>
+                    <div class="timeline-event">Первые сигналы от IDS о подозрительной активности</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">14:42</div>
+                    <div class="timeline-event">Эскалация инцидента, начало расследования</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">14:55</div>
+                    <div class="timeline-event">Идентификация источника атаки</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">15:10</div>
+                    <div class="timeline-event">Блокировка вредоносных IP, изоляция систем</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-time">15:20</div>
+                    <div class="timeline-event">Инцидент локализован, угроза устранена</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentTemplate = 'incident';
+        let currentSeverity = 'critical';
+        
+        function selectTemplate(template) {
+            currentTemplate = template;
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.target.closest('.template-card').classList.add('active');
+            
+            // Автозаполнение в зависимости от шаблона
+            const templates = {
+                incident: {
+                    title: 'Критический инцидент безопасности - Попытка несанкционированного доступа',
+                    summary: '24 января 2025 года в 14:35 MSK системой мониторинга SOC были обнаружены множественные попытки несанкционированного доступа к критическим серверам компании. Атака была успешно отражена, утечки данных не произошло.'
+                },
+                monthly: {
+                    title: 'Ежемесячный отчет по информационной безопасности - Январь 2025',
+                    summary: 'В январе 2025 года SOC обработал 1,247 событий безопасности, из которых 23 были классифицированы как инциденты. Общий уровень защищенности составил 94.3%, что на 2.1% выше показателя прошлого месяца.'
+                },
+                threat: {
+                    title: 'Анализ актуальных киберугроз - Q1 2025',
+                    summary: 'Обнаружены новые кампании APT-группировок, нацеленные на финансовый сектор. Основные векторы атак: фишинг с использованием ИИ, эксплуатация 0-day уязвимостей в популярных CMS.'
+                },
+                vulnerability: {
+                    title: 'Отчет по результатам сканирования уязвимостей - Январь 2025',
+                    summary: 'Проведено плановое сканирование 523 систем. Обнаружено: критических уязвимостей - 12, высоких - 47, средних - 134. Все критические уязвимости устранены в течение 24 часов.'
+                }
+            };
+            
+            if (templates[template]) {
+                document.getElementById('reportTitle').value = templates[template].title;
+                document.getElementById('executiveSummary').value = templates[template].summary;
+                generatePreview();
+            }
+        }
+        
+        function selectSeverity(severity) {
+            currentSeverity = severity;
+            document.querySelectorAll('.severity-btn').forEach(btn => {
+                btn.style.opacity = '0.5';
+            });
+            event.target.style.opacity = '1';
+        }
+        
+        function generatePreview() {
+            document.getElementById('previewTitle').textContent = document.getElementById('reportTitle').value;
+            document.getElementById('previewSummary').textContent = document.getElementById('executiveSummary').value;
+            document.getElementById('previewSystems').textContent = document.getElementById('affectedSystems').value;
+            document.getElementById('previewUsers').textContent = document.getElementById('affectedUsers').value;
+            document.getElementById('previewResponse').textContent = document.getElementById('responseTime').value;
+            document.getElementById('previewLoss').textContent = document.getElementById('estimatedLoss').value;
+            
+            const actions = document.getElementById('keyActions').value.replace(/\n/g, '<br>');
+            const recommendations = document.getElementById('recommendations').value.replace(/\n/g, '<br>');
+            
+            document.getElementById('previewActions').innerHTML = actions;
+            document.getElementById('previewRecommendations').innerHTML = recommendations;
+            
+            // Обновляем индикатор критичности
+            const severityText = {
+                critical: '🔴 Критический',
+                high: '🟠 Высокий',
+                medium: '🟡 Средний',
+                low: '🟢 Низкий'
+            };
+            
+            document.querySelector('.preview-meta span:nth-child(2)').textContent = severityText[currentSeverity];
+        }
+        
+        function exportReport() {
+            const reportContent = document.getElementById('reportPreview').innerHTML;
+            const blob = new Blob([reportContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'executive_summary_' + new Date().toISOString().slice(0, 10) + '.doc';
+            a.click();
+        }
+        
+        function copyToClipboard() {
+            const reportText = document.getElementById('reportPreview').innerText;
+            navigator.clipboard.writeText(reportText).then(() => {
+                alert('Отчет скопирован в буфер обмена!');
+            });
+        }
+        
+        // Автообновление превью при изменении полей
+        document.querySelectorAll('.input-field').forEach(field => {
+            field.addEventListener('input', generatePreview);
+        });
+        
+        // Инициализация
+        generatePreview();
+    </script>
+</body>
+</html>

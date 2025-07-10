@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escalation Decision Tree</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e57c2 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #e1e5ee;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .decision-tree {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .decision-node {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid;
+            position: relative;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .decision-node:nth-child(1) { animation-delay: 0.1s; }
+        .decision-node:nth-child(2) { animation-delay: 0.2s; }
+        .decision-node:nth-child(3) { animation-delay: 0.3s; }
+        .decision-node:nth-child(4) { animation-delay: 0.4s; }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .decision-node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .node-question {
+            border-color: #64b5f6;
+            background: linear-gradient(135deg, rgba(100, 181, 246, 0.2), rgba(100, 181, 246, 0.1));
+        }
+        
+        .node-escalate {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+        }
+        
+        .node-investigate {
+            border-color: #ffd700;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+        }
+        
+        .node-close {
+            border-color: #00e676;
+            background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 230, 118, 0.1));
+        }
+        
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .node-icon {
+            font-size: 2.5em;
+        }
+        
+        .node-title {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .decision-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .option-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .option-yes {
+            border-color: #ff6b6b;
+        }
+        
+        .option-no {
+            border-color: #00e676;
+        }
+        
+        .option-maybe {
+            border-color: #ffd700;
+        }
+        
+        .option-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .option-action {
+            font-size: 0.9em;
+            color: #e1e5ee;
+        }
+        
+        .severity-matrix {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .matrix-title {
+            font-size: 1.8em;
+            color: #ff6b6b;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .severity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .severity-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .severity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .p1 { border-color: #ff1744; background: rgba(255, 23, 68, 0.1); }
+        .p2 { border-color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+        .p3 { border-color: #ffa502; background: rgba(255, 165, 2, 0.1); }
+        .p4 { border-color: #00e676; background: rgba(0, 230, 118, 0.1); }
+        
+        .severity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .severity-level {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .response-time {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        
+        .criteria-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #e1e5ee;
+        }
+        
+        .criteria-item::before {
+            content: '▸';
+            color: inherit;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+        
+        .escalation-criteria {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .criteria-title {
+            font-size: 1.8em;
+            color: #ffd700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .criteria-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .criteria-category {
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .criteria-examples {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .example-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+            transition: all 0.3s ease;
+        }
+        
+        .example-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .communication-guide {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .comm-title {
+            font-size: 1.8em;
+            color: #9c27b0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .comm-templates {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .template-card {
+            background: rgba(156, 39, 176, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .template-header {
+            font-weight: bold;
+            color: #9c27b0;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .template-content {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            line-height: 1.6;
+            color: #e1e5ee;
+        }
+        
+        .template-fields {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .decision-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .severity-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Escalation Decision Tree</h1>
+        <p class="subtitle">Когда и как эскалировать инциденты на L2/L3</p>
+        
+        <div class="decision-tree">
+            <div class="tree-container">
+                <div class="decision-node node-question">
+                    <div class="node-header">
+                        <span class="node-icon">❓</span>
+                        <div class="node-title">Обнаружена ли активная угроза?</div>
+                    </div>
+                    <div class="decision-options">
+                        <div class="option-card option-yes">
+                            <div class="option-label">✓ ДА</div>
+                            <div class="option-action">
+                                • Malware execution confirmed<br>
+                                • Active C2 communication<br>
+                                • Lateral movement detected<br>
+                                → Немедленная эскалация на L2
+                            </div>
+                        </div>
+                        <div class="option-card option-no">
+                            <div class="option-label">✗ НЕТ</div>
+                            <div class="option-action">
+                                • Подозрительная активность<br>
+                                • Требует дополнительного анализа<br>
+                                • Нет явных IOC<br>
+                                → Продолжить расследование
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="decision-node node-question">
+                    <div class="node-header">
+                        <span class="node-icon">🎯</span>
+                        <div class="node-title">Затронуты ли критические системы?</div>
+                    </div>
+                    <div class="decision-options">
+                        <div class="option-card option-yes">
+                            <div class="option-label">🔴 Critical Assets</div>
+                            <div class="option-action">
+                                • Domain Controllers<br>
+                                • Payment systems<br>
+                                • Customer databases<br>
+                                → P1/P2 эскалация
+                            </div>
+                        </div>
+                        <div class="option-card option-maybe">
+                            <div class="option-label">🟡 Important Systems</div>
+                            <div class="option-action">
+                                • Production servers<br>
+                                • Business applications<br>
+                                • Email infrastructure<br>
+                                → P2/P3 эскалация
+                            </div>
+                        </div>
+                        <div class="option-card option-no">
+                            <div class="option-label">🟢 Standard Systems</div>
+                            <div class="option-action">
+                                • User workstations<br>
+                                • Test environments<br>
+                                • Non-critical services<br>
+                                → P3/P4 или investigate
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="decision-node node-question">
+                    <div class="node-header">
+                        <span class="node-icon">📊</span>
+                        <div class="node-title">Масштаб инцидента?</div>
+                    </div>
+                    <div class="decision-options">
+                        <div class="option-card option-yes">
+                            <div class="option-label">🌐 Широкий</div>
+                            <div class="option-action">
+                                • >10 затронутых систем<br>
+                                • Multiple departments<br>
+                                • Cross-site impact<br>
+                                → Немедленная эскалация
+                            </div>
+                        </div>
+                        <div class="option-card option-maybe">
+                            <div class="option-label">📍 Локальный</div>
+                            <div class="option-action">
+                                • 2-10 систем<br>
+                                • Single department<br>
+                                • Contained spread<br>
+                                → Оценить риск распространения
+                            </div>
+                        </div>
+                        <div class="option-card option-no">
+                            <div class="option-label">📌 Изолированный</div>
+                            <div class="option-action">
+                                • Single system<br>
+                                • No lateral movement<br>
+                                • User-specific issue<br>
+                                → Может решить L1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="decision-node node-question">
+                    <div class="node-header">
+                        <span class="node-icon">🔍</span>
+                        <div class="node-title">Уверенность в анализе?</div>
+                    </div>
+                    <div class="decision-options">
+                        <div class="option-card option-yes">
+                            <div class="option-label">✅ Высокая</div>
+                            <div class="option-action">
+                                • Clear IOCs identified<br>
+                                • Known attack pattern<br>
+                                • Documented playbook exists<br>
+                                → Следовать playbook
+                            </div>
+                        </div>
+                        <div class="option-card option-maybe">
+                            <div class="option-label">⚠️ Средняя</div>
+                            <div class="option-action">
+                                • Some indicators present<br>
+                                • Partially matches patterns<br>
+                                • Need expert validation<br>
+                                → Консультация с L2
+                            </div>
+                        </div>
+                        <div class="option-card option-no">
+                            <div class="option-label">❌ Низкая</div>
+                            <div class="option-action">
+                                • Unknown behavior<br>
+                                • Complex attack chain<br>
+                                • No clear indicators<br>
+                                → Эскалация для анализа
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="severity-matrix">
+            <h2 class="matrix-title">🚨 Матрица критичности инцидентов</h2>
+            <div class="severity-grid">
+                <div class="severity-card p1">
+                    <div class="severity-header">
+                        <span class="severity-level">P1 - Critical</span>
+                        <span class="response-time">⏱️ 15 min</span>
+                    </div>
+                    <ul class="criteria-list">
+                        <li class="criteria-item">Ransomware активно шифрует данные</li>
+                        <li class="criteria-item">Data breach с кражей PII/финансовых данных</li>
+                        <li class="criteria-item">Компрометация Domain Admin</li>
+                        <li class="criteria-item">Полный отказ критических сервисов</li>
+                        <li class="criteria-item">APT activity confirmed</li>
+                    </ul>
+                    <div style="background: rgba(255, 23, 68, 0.2); padding: 10px; border-radius: 8px; margin-top: 15px;">
+                        <strong>Действие:</strong> Немедленно позвонить L2/L3, активировать IR team
+                    </div>
+                </div>
+                
+                <div class="severity-card p2">
+                    <div class="severity-header">
+                        <span class="severity-level">P2 - High</span>
+                        <span class="response-time">⏱️ 30 min</span>
+                    </div>
+                    <ul class="criteria-list">
+                        <li class="criteria-item">Подозрение на ransomware (pre-encryption)</li>
+                        <li class="criteria-item">Privilege escalation detected</li>
+                        <li class="criteria-item">C2 communication established</li>
+                        <li class="criteria-item">Critical server compromise</li>
+                        <li class="criteria-item">Массовые failed logons (>1000)</li>
+                    </ul>
+                    <div style="background: rgba(255, 107, 107, 0.2); padding: 10px; border-radius: 8px; margin-top: 15px;">
+                        <strong>Действие:</strong> Эскалация через ticketing system, уведомить L2
+                    </div>
+                </div>
+                
+                <div class="severity-card p3">
+                    <div class="severity-header">
+                        <span class="severity-level">P3 - Medium</span>
+                        <span class="response-time">⏱️ 2 hours</span>
+                    </div>
+                    <ul class="criteria-list">
+                        <li class="criteria-item">Malware на некритической системе</li>
+                        <li class="criteria-item">Phishing campaign (limited scope)</li>
+                        <li class="criteria-item">Suspicious process execution</li>
+                        <li class="criteria-item">Unauthorized software installation</li>
+                        <li class="criteria-item">Policy violations</li>
+                    </ul>
+                    <div style="background: rgba(255, 165, 2, 0.2); padding: 10px; border-radius: 8px; margin-top: 15px;">
+                        <strong>Действие:</strong> Investigate, contain если возможно, эскалировать при необходимости
+                    </div>
+                </div>
+                
+                <div class="severity-card p4">
+                    <div class="severity-header">
+                        <span class="severity-level">P4 - Low</span>
+                        <span class="response-time">⏱️ 8 hours</span>
+                    </div>
+                    <ul class="criteria-list">
+                        <li class="criteria-item">False positive confirmed</li>
+                        <li class="criteria-item">Known benign activity</li>
+                        <li class="criteria-item">Informational alerts</li>
+                        <li class="criteria-item">User error/misconfiguration</li>
+                        <li class="criteria-item">Scheduled maintenance alerts</li>
+                    </ul>
+                    <div style="background: rgba(0, 230, 118, 0.2); padding: 10px; border-radius: 8px; margin-top: 15px;">
+                        <strong>Действие:</strong> Document и close, tune detection rules если нужно
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="escalation-criteria">
+            <h2 class="criteria-title">🎯 Критерии для немедленной эскалации</h2>
+            <div class="criteria-categories">
+                <div class="criteria-category">
+                    <div class="category-name">🔴 Технические индикаторы</div>
+                    <ul class="criteria-examples">
+                        <li class="example-item">Выполнение известного malware (Mimikatz, Cobalt Strike)</li>
+                        <li class="example-item">Lateral movement между системами</li>
+                        <li class="example-item">Массовое удаление логов или shadow copies</li>
+                        <li class="example-item">Изменения в критических файлах ОС</li>
+                        <li class="example-item">Новые admin accounts или изменение прав</li>
+                        <li class="example-item">Обнаружение web shells</li>
+                    </ul>
+                </div>
+                
+                <div class="criteria-category">
+                    <div class="category-name">🟡 Поведенческие индикаторы</div>
+                    <ul class="criteria-examples">
+                        <li class="example-item">Необычная активность в нерабочее время</li>
+                        <li class="example-item">Доступ к системам вне обычной роли</li>
+                        <li class="example-item">Массовое копирование/архивирование данных</li>
+                        <li class="example-item">Использование редко применяемых инструментов</li>
+                        <li class="example-item">Подключения из необычных геолокаций</li>
+                        <li class="example-item">Обход security controls</li>
+                    </ul>
+                </div>
+                
+                <div class="criteria-category">
+                    <div class="category-name">🔵 Бизнес-индикаторы</div>
+                    <ul class="criteria-examples">
+                        <li class="example-item">Влияние на revenue-generating системы</li>
+                        <li class="example-item">Риск регуляторных штрафов (GDPR, PCI)</li>
+                        <li class="example-item">Потенциальный PR/репутационный ущерб</li>
+                        <li class="example-item">Затронуты VIP пользователи (C-level)</li>
+                        <li class="example-item">Влияние на критические бизнес-процессы</li>
+                        <li class="example-item">Third-party/supply chain impact</li>
+                    </ul>
+                </div>
+                
+                <div class="criteria-category">
+                    <div class="category-name">⚪ Когда НЕ эскалировать</div>
+                    <ul class="criteria-examples">
+                        <li class="example-item">Известные false positives в вашей среде</li>
+                        <li class="example-item">Scheduled/authorized activities</li>
+                        <li class="example-item">Duplicate alerts (уже работают)</li>
+                        <li class="example-item">Test/dev environment alerts</li>
+                        <li class="example-item">User-resolvable issues (password reset)</li>
+                        <li class="example-item">Informational logs без risk</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="communication-guide">
+            <h2 class="comm-title">📞 Шаблоны коммуникации при эскалации</h2>
+            <div class="comm-templates">
+                <div class="template-card">
+                    <div class="template-header">🚨 P1/P2 Phone Escalation Script</div>
+                    <div class="template-content">
+                        "This is <span class="template-fields">[Your Name]</span> from L1 SOC.<br>
+                        I need to escalate a <span class="template-fields">[P1/P2]</span> incident.<br><br>
+                        
+                        <strong>Alert:</strong> <span class="template-fields">[Alert Name/ID]</span><br>
+                        <strong>Time:</strong> <span class="template-fields">[Detection Time]</span><br>
+                        <strong>Affected:</strong> <span class="template-fields">[Systems/Users Count]</span><br>
+                        <strong>Impact:</strong> <span class="template-fields">[Business Impact]</span><br><br>
+                        
+                        <strong>What I've observed:</strong><br>
+                        • <span class="template-fields">[Key Finding 1]</span><br>
+                        • <span class="template-fields">[Key Finding 2]</span><br>
+                        • <span class="template-fields">[Key Finding 3]</span><br><br>
+                        
+                        <strong>Actions taken:</strong><br>
+                        • <span class="template-fields">[Containment steps if any]</span><br>
+                        • <span class="template-fields">[Evidence collected]</span><br><br>
+                        
+                        Ticket #: <span class="template-fields">[Ticket Number]</span>"
+                    </div>
+                </div>
+                
+                <div class="template-card">
+                    <div class="template-header">📧 Email Escalation Template</div>
+                    <div class="template-content">
+                        <strong>Subject:</strong> [<span class="template-fields">P2/P3</span>] Escalation: <span class="template-fields">[Brief Description]</span> - Ticket #<span class="template-fields">[Number]</span><br><br>
+                        
+                        <strong>Priority:</strong> <span class="template-fields">[P1/P2/P3]</span><br>
+                        <strong>Incident Time:</strong> <span class="template-fields">[UTC Time]</span><br>
+                        <strong>Detection Source:</strong> <span class="template-fields">[SIEM/EDR/User Report]</span><br><br>
+                        
+                        <strong>Executive Summary:</strong><br>
+                        <span class="template-fields">[2-3 sentences describing the incident and impact]</span><br><br>
+                        
+                        <strong>Technical Details:</strong><br>
+                        • Affected Systems: <span class="template-fields">[Hostnames/IPs]</span><br>
+                        • IOCs Identified: <span class="template-fields">[Hashes/IPs/Domains]</span><br>
+                        • Attack Vector: <span class="template-fields">[Phishing/Exploit/etc]</span><br><br>
+                        
+                        <strong>Timeline:</strong><br>
+                        • <span class="template-fields">[Time]</span> - Initial detection<br>
+                        • <span class="template-fields">[Time]</span> - Confirmation of threat<br>
+                        • <span class="template-fields">[Time]</span> - Containment initiated<br><br>
+                        
+                        <strong>Current Status:</strong><br>
+                        <span class="template-fields">[What's been done and current state]</span><br><br>
+                        
+                        <strong>Assistance Required:</strong><br>
+                        <span class="template-fields">[Specific help needed from L2/L3]</span><br><br>
+                        
+                        <strong>Attachments:</strong><br>
+                        • Screenshots<br>
+                        • Log exports<br>
+                        • IOC list
+                    </div>
+                </div>
+                
+                <div class="template-card">
+                    <div class="template-header">💬 Slack/Teams Quick Escalation</div>
+                    <div class="template-content">
+                        @<span class="template-fields">[L2-oncall]</span> 🚨 <span class="template-fields">[P1/P2]</span> Alert<br><br>
+                        
+                        <strong>What:</strong> <span class="template-fields">[Brief description]</span><br>
+                        <strong>Where:</strong> <span class="template-fields">[Affected systems]</span><br>
+                        <strong>When:</strong> <span class="template-fields">[Time]</span><br>
+                        <strong>Impact:</strong> <span class="template-fields">[Business impact]</span><br><br>
+                        
+                        Ticket: <span class="template-fields">[Link to ticket]</span><br>
+                        Need immediate assistance with <span class="template-fields">[specific ask]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

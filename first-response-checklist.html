@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Response Checklist</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0a0e27 0%, #2a1650 50%, #1a237e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00e5ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #e1e8f0;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .incident-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .incident-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInScale 0.8s ease-out forwards;
+        }
+        
+        .incident-card:nth-child(1) { animation-delay: 0.1s; border-color: #ff1744; }
+        .incident-card:nth-child(2) { animation-delay: 0.2s; border-color: #ff6b6b; }
+        .incident-card:nth-child(3) { animation-delay: 0.3s; border-color: #ffa726; }
+        .incident-card:nth-child(4) { animation-delay: 0.4s; border-color: #66bb6a; }
+        .incident-card:nth-child(5) { animation-delay: 0.5s; border-color: #42a5f5; }
+        .incident-card:nth-child(6) { animation-delay: 0.6s; border-color: #ab47bc; }
+        
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .incident-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transition: all 0.5s ease;
+        }
+        
+        .incident-card:hover::before {
+            top: -150%;
+            left: -150%;
+        }
+        
+        .incident-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .incident-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .incident-icon {
+            font-size: 3em;
+        }
+        
+        .incident-info {
+            flex: 1;
+        }
+        
+        .incident-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .incident-severity {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .severity-critical { background: #ff1744; }
+        .severity-high { background: #ff6b6b; }
+        .severity-medium { background: #ffa726; }
+        
+        .checklist-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #00e5ff;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .checklist-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border-left: 3px solid #00e5ff;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .checklist-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(5px);
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00e5ff;
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .checkbox.checked {
+            background: #00e5ff;
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .checklist-text {
+            flex: 1;
+            color: #e1e8f0;
+            line-height: 1.5;
+        }
+        
+        .timeline-badge {
+            display: inline-block;
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .critical-actions {
+            background: rgba(255, 23, 68, 0.1);
+            border: 2px solid #ff1744;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .critical-title {
+            color: #ff1744;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quick-reference {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+        }
+        
+        .reference-title {
+            font-size: 1.8em;
+            color: #00e5ff;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .reference-card {
+            background: rgba(0, 229, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .reference-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 229, 255, 0.2);
+        }
+        
+        .reference-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .reference-name {
+            font-weight: bold;
+            color: #00e5ff;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .reference-content {
+            font-size: 0.9em;
+            color: #e1e8f0;
+            line-height: 1.6;
+        }
+        
+        .command-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+        
+        .escalation-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .escalation-title {
+            font-size: 1.8em;
+            color: #ffc107;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .escalation-triggers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .trigger-card {
+            background: rgba(255, 193, 7, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .trigger-title {
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .trigger-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .trigger-item {
+            padding: 5px 0;
+            color: #e1e8f0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .trigger-item::before {
+            content: '⚡';
+            color: #ffc107;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .incident-types {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ First Response Checklist</h1>
+        <p class="subtitle">Чек-листы первоочередных действий для различных типов инцидентов</p>
+        
+        <div class="incident-types">
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">🔓</span>
+                    <div class="incident-info">
+                        <div class="incident-title">Ransomware Attack</div>
+                        <span class="incident-severity severity-critical">CRITICAL</span>
+                    </div>
+                </div>
+                
+                <div class="critical-actions">
+                    <div class="critical-title">⚡ Критические действия (0-5 минут)</div>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">НЕМЕДЛЕННО изолировать infected системы от сети</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Отключить затронутые системы от общих папок и backup</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Активировать Incident Response Team</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔍 Initial Assessment (5-15 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Идентифицировать ransomware variant (расширение, ransom note)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Определить patient zero и вектор заражения</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Оценить масштаб заражения (количество систем)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Проверить backup системы на заражение</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🛡️ Containment (15-30 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Блокировать C2 communication (IPs/domains)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Disable affected user accounts</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Reset passwords для compromised accounts</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Создать forensic images критических систем</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">📊 Documentation</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Screenshot ransom notes и encrypted files</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Сохранить samples вредоносного ПО</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Document timeline событий</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Collect и preserve logs</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">🎣</span>
+                    <div class="incident-info">
+                        <div class="incident-title">Phishing / BEC</div>
+                        <span class="incident-severity severity-high">HIGH</span>
+                    </div>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">📧 Email Analysis (0-10 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Получить copy подозрительного email (headers included)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Анализировать sender, subject, SPF/DKIM/DMARC</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Extract URLs и attachments для анализа</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check reputation отправителя и URLs</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🚨 Immediate Actions (10-20 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Block sender на email gateway</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Quarantine/delete emails из всех mailboxes</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Block malicious URLs на proxy/firewall</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Reset passwords для clicked users</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔍 Investigation (20-30 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Search для similar emails в организации</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Identify все affected users</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check для post-compromise activity</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Sandbox analysis вложений</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">🚪</span>
+                    <div class="incident-info">
+                        <div class="incident-title">Account Compromise</div>
+                        <span class="incident-severity severity-high">HIGH</span>
+                    </div>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔒 Immediate Containment (0-5 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Disable compromised account немедленно</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Revoke all active sessions и tokens</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Block source IPs если известны</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check для privilege escalation</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">📊 Activity Review (5-15 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Review authentication logs (successful/failed)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check email activity (sent items, rules)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Review file access и downloads</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Look для lateral movement attempts</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔄 Recovery Actions</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Reset password и enforce MFA</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Review и remove unauthorized access</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check для backdoors (OAuth apps, mail rules)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Notify user и provide guidance</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">🦠</span>
+                    <div class="incident-info">
+                        <div class="incident-title">Malware Detection</div>
+                        <span class="incident-severity severity-medium">MEDIUM</span>
+                    </div>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🖥️ Host Isolation (0-10 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Isolate infected host от network</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Preserve volatile data (memory, network connections)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Stop suspicious processes если safe</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Collect malware samples для analysis</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔍 Malware Analysis</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Submit samples to sandbox (VirusTotal, Any.run)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Identify malware family и capabilities</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Extract IOCs (hashes, IPs, domains)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check persistence mechanisms</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🌐 Scope Assessment</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Search для IOCs across environment</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Check network connections для C2</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Review lateral movement indicators</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Update security controls с IOCs</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">💥</span>
+                    <div class="incident-info">
+                        <div class="incident-title">DDoS Attack</div>
+                        <span class="incident-severity severity-high">HIGH</span>
+                    </div>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🚨 Initial Response (0-5 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Confirm DDoS vs legitimate traffic spike</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Identify attack type и targeted services</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Activate DDoS protection если available</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Notify network team и ISP</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">⚡ Mitigation (5-15 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Enable rate limiting на edge devices</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Block source IPs если identifiable</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Implement geo-blocking если applicable</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Scale resources если cloud-based</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">📊 Monitoring</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Monitor bandwidth utilization</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Track service availability</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Capture traffic samples для analysis</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Document attack patterns</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="incident-card">
+                <div class="incident-header">
+                    <span class="incident-icon">📊</span>
+                    <div class="incident-info">
+                        <div class="incident-title">Data Breach/Exfiltration</div>
+                        <span class="incident-severity severity-critical">CRITICAL</span>
+                    </div>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔴 Immediate Actions (0-10 минут)</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Identify и contain источник breach</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Block data exfiltration channels</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Preserve evidence для investigation</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Activate legal и compliance teams</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">🔍 Scope Determination</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Identify what data was accessed/stolen</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Determine affected individuals/records</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Review data classification (PII, PHI, PCI)</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Timeline reconstruction</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="checklist-section">
+                    <h3 class="section-title">📋 Compliance & Reporting</h3>
+                    <ul class="checklist">
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Document all findings thoroughly</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Prepare breach notification если required</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Coordinate с PR для external comms</span>
+                        </li>
+                        <li class="checklist-item" onclick="toggleCheck(this)">
+                            <div class="checkbox"></div>
+                            <span class="checklist-text">Report to authorities (GDPR 72h)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-reference">
+            <h2 class="reference-title">⚡ Quick Reference & Commands</h2>
+            <div class="reference-grid">
+                <div class="reference-card">
+                    <div class="reference-icon">🔍</div>
+                    <div class="reference-name">Process Investigation</div>
+                    <div class="reference-content">
+                        <div class="command-box">tasklist /v | findstr suspicious.exe</div>
+                        <div class="command-box">wmic process where name="malware.exe" get processid,parentprocessid,commandline</div>
+                        <div class="command-box">Get-Process | Where-Object {$_.Name -like "*suspicious*"}</div>
+                    </div>
+                </div>
+                
+                <div class="reference-card">
+                    <div class="reference-icon">🌐</div>
+                    <div class="reference-name">Network Connections</div>
+                    <div class="reference-content">
+                        <div class="command-box">netstat -anob | findstr ESTABLISHED</div>
+                        <div class="command-box">Get-NetTCPConnection | Where-Object {$_.State -eq "Established"}</div>
+                        <div class="command-box">ss -tupn | grep ESTABLISHED</div>
+                    </div>
+                </div>
+                
+                <div class="reference-card">
+                    <div class="reference-icon">👤</div>
+                    <div class="reference-name">Account Activity</div>
+                    <div class="reference-content">
+                        <div class="command-box">net user suspicious_user /domain</div>
+                        <div class="command-box">Get-ADUser -Filter * -Properties LastLogonDate</div>
+                        <div class="command-box">wevtutil qe Security /q:"*[EventData[Data[@Name='TargetUserName']='username']]"</div>
+                    </div>
+                </div>
+                
+                <div class="reference-card">
+                    <div class="reference-icon">📋</div>
+                    <div class="reference-name">Log Collection</div>
+                    <div class="reference-content">
+                        <div class="command-box">wevtutil epl Security C:\temp\security.evtx</div>
+                        <div class="command-box">Get-WinEvent -FilterHashtable @{LogName='Security'; StartTime=(Get-Date).AddHours(-24)}</div>
+                        <div class="command-box">tar -czf logs.tar.gz /var/log/</div>
+                    </div>
+                </div>
+                
+                <div class="reference-card">
+                    <div class="reference-icon">🔒</div>
+                    <div class="reference-name">Quick Containment</div>
+                    <div class="reference-content">
+                        <div class="command-box">Disable-ADAccount -Identity "username"</div>
+                        <div class="command-box">netsh advfirewall firewall add rule name="Block_IP" dir=in action=block remoteip=x.x.x.x</div>
+                        <div class="command-box">Set-ADAccountPassword -Identity username -Reset</div>
+                    </div>
+                </div>
+                
+                <div class="reference-card">
+                    <div class="reference-icon">💾</div>
+                    <div class="reference-name">Evidence Preservation</div>
+                    <div class="reference-content">
+                        <div class="command-box">FTK Imager для RAM capture</div>
+                        <div class="command-box">volatility -f memory.dmp imageinfo</div>
+                        <div class="command-box">dd if=/dev/sda of=/mnt/evidence/disk.img</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="escalation-box">
+            <h2 class="escalation-title">📞 Когда эскалировать немедленно</h2>
+            <div class="escalation-triggers">
+                <div class="trigger-card">
+                    <div class="trigger-title">🔴 Critical Systems</div>
+                    <ul class="trigger-list">
+                        <li class="trigger-item">Domain Controllers compromised</li>
+                        <li class="trigger-item">Critical data encryption/deletion</li>
+                        <li class="trigger-item">Financial systems affected</li>
+                        <li class="trigger-item">Customer data breach confirmed</li>
+                    </ul>
+                </div>
+                
+                <div class="trigger-card">
+                    <div class="trigger-title">🎯 Attack Indicators</div>
+                    <ul class="trigger-list">
+                        <li class="trigger-item">Active lateral movement observed</li>
+                        <li class="trigger-item">Data exfiltration in progress</li>
+                        <li class="trigger-item">Privilege escalation successful</li>
+                        <li class="trigger-item">Multiple systems compromised</li>
+                    </ul>
+                </div>
+                
+                <div class="trigger-card">
+                    <div class="trigger-title">⚡ Business Impact</div>
+                    <ul class="trigger-list">
+                        <li class="trigger-item">Service outage affecting customers</li>
+                        <li class="trigger-item">Regulatory compliance violation</li>
+                        <li class="trigger-item">Potential media/PR impact</li>
+                        <li class="trigger-item">Third-party systems affected</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleCheck(item) {
+            const checkbox = item.querySelector('.checkbox');
+            checkbox.classList.toggle('checked');
+        }
+    </script>
+</body>
+</html>

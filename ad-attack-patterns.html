@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AD Attack Patterns</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1e3c72 50%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d2ff;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b0bec5;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .attack-categories {
+            display: grid;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .category-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            opacity: 0;
+            animation: slideIn 0.8s ease-out forwards;
+        }
+        
+        .category-section:nth-child(1) { animation-delay: 0.1s; }
+        .category-section:nth-child(2) { animation-delay: 0.2s; }
+        .category-section:nth-child(3) { animation-delay: 0.3s; }
+        .category-section:nth-child(4) { animation-delay: 0.4s; }
+        .category-section:nth-child(5) { animation-delay: 0.5s; }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .category-icon {
+            font-size: 2.5em;
+        }
+        
+        .category-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00d2ff;
+        }
+        
+        .attacks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .attack-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .attack-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s ease;
+        }
+        
+        .attack-card:hover::before {
+            left: 100%;
+        }
+        
+        .attack-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .severity-critical { border-color: #ff1744; }
+        .severity-high { border-color: #ff6b6b; }
+        .severity-medium { border-color: #ffa502; }
+        
+        .attack-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .attack-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #64b5f6;
+        }
+        
+        .severity-badge {
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .severity-critical .severity-badge { background: rgba(255, 23, 68, 0.2); color: #ff1744; }
+        .severity-high .severity-badge { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .severity-medium .severity-badge { background: rgba(255, 165, 2, 0.2); color: #ffa502; }
+        
+        .attack-desc {
+            color: #b0bec5;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .attack-details {
+            margin-top: 15px;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+        
+        .detail-title {
+            font-weight: bold;
+            color: #00d2ff;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .detail-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .detail-item {
+            padding: 5px 0;
+            color: #b0bec5;
+            font-size: 0.85em;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .detail-item::before {
+            content: '▸';
+            color: #00d2ff;
+            flex-shrink: 0;
+        }
+        
+        .mitre-tag {
+            display: inline-block;
+            background: rgba(156, 39, 176, 0.2);
+            color: #9c27b0;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        
+        .detection-matrix {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+        }
+        
+        .matrix-title {
+            font-size: 1.5em;
+            color: #00e676;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .detection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .detection-card {
+            background: rgba(0, 230, 118, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .detection-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(0, 230, 118, 0.2);
+        }
+        
+        .detection-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .detection-name {
+            font-weight: bold;
+            color: #00e676;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .event-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .event-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .event-id {
+            color: #00e676;
+            font-weight: bold;
+        }
+        
+        .event-desc {
+            color: #b0bec5;
+        }
+        
+        .tools-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .tools-title {
+            font-size: 1.5em;
+            color: #ffc107;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .tools-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .tool-category {
+            background: rgba(255, 193, 7, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .tool-desc {
+            color: #b0bec5;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .attacks-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏰 AD Attack Patterns</h1>
+        <p class="subtitle">Типичные атаки на Active Directory и методы их обнаружения</p>
+        
+        <div class="attack-categories">
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🔑</span>
+                    <h2 class="category-title">Credential Access Attacks</h2>
+                </div>
+                <div class="attacks-grid">
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">Kerberoasting</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Запрос Service Tickets (TGS) для учетных записей служб с последующим offline взломом паролей
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Поиск SPN через setspn или LDAP</li>
+                                    <li class="detail-item">Запрос TGS для найденных SPN</li>
+                                    <li class="detail-item">Извлечение хешей из tickets</li>
+                                    <li class="detail-item">Offline brute-force (hashcat/john)</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4769 с RC4 encryption</li>
+                                    <li class="detail-item">Множественные TGS запросы</li>
+                                    <li class="detail-item">Аномальные SPN запросы</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1558.003</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">AS-REP Roasting</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Атака на учетные записи без Kerberos предаутентификации для получения AS-REP хешей
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Поиск учеток с UF_DONT_REQUIRE_PREAUTH</li>
+                                    <li class="detail-item">Запрос AS-REQ без pre-auth</li>
+                                    <li class="detail-item">Получение AS-REP с encrypted data</li>
+                                    <li class="detail-item">Offline password cracking</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4768 без pre-auth</li>
+                                    <li class="detail-item">Мониторинг изменений UserAccountControl</li>
+                                    <li class="detail-item">LDAP queries на vulnerable accounts</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1558.004</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">Password Spraying</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Попытка входа с одним паролем для множества учетных записей
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Сбор списка пользователей</li>
+                                    <li class="detail-item">Использование common passwords</li>
+                                    <li class="detail-item">Соблюдение lockout threshold</li>
+                                    <li class="detail-item">Распределение по времени</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4625 patterns</li>
+                                    <li class="detail-item">Single password, multiple users</li>
+                                    <li class="detail-item">Failed logons ниже lockout</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1110.003</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">DCSync</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Имитация Domain Controller для репликации учетных данных через MS-DRSR
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Требует прав DS-Replication-Get-Changes</li>
+                                    <li class="detail-item">Использование Mimikatz DCSync</li>
+                                    <li class="detail-item">Извлечение NTLM хешей</li>
+                                    <li class="detail-item">Получение Kerberos keys</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4662 на DC</li>
+                                    <li class="detail-item">Non-DC источник репликации</li>
+                                    <li class="detail-item">DS-Replication-Get-Changes-All</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1003.006</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🎫</span>
+                    <h2 class="category-title">Kerberos Attacks</h2>
+                </div>
+                <div class="attacks-grid">
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">Golden Ticket</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Создание поддельного TGT с использованием KRBTGT hash для полного контроля домена
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Компрометация KRBTGT hash</li>
+                                    <li class="detail-item">Создание TGT с любыми привилегиями</li>
+                                    <li class="detail-item">Lifetime до 10 лет</li>
+                                    <li class="detail-item">Работает даже после смены паролей</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">TGT с аномальным lifetime</li>
+                                    <li class="detail-item">Event ID 4769 от несуществующих TGT</li>
+                                    <li class="detail-item">Логоны после отключения учетки</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1558.001</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">Silver Ticket</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Создание поддельного Service Ticket для доступа к конкретному сервису
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Требует service account NTLM hash</li>
+                                    <li class="detail-item">Создание TGS для целевого сервиса</li>
+                                    <li class="detail-item">Обход DC при аутентификации</li>
+                                    <li class="detail-item">PAC manipulation возможна</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Отсутствие Event ID 4769 на DC</li>
+                                    <li class="detail-item">Service logon без TGS request</li>
+                                    <li class="detail-item">PAC validation errors</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1558.002</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-medium">
+                        <div class="attack-header">
+                            <span class="attack-name">Overpass-the-Hash</span>
+                            <span class="severity-badge">MEDIUM</span>
+                        </div>
+                        <div class="attack-desc">
+                            Использование NTLM хеша для получения Kerberos TGT
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">NTLM hash вместо пароля</li>
+                                    <li class="detail-item">Запрос легитимного TGT</li>
+                                    <li class="detail-item">Дальнейшее использование Kerberos</li>
+                                    <li class="detail-item">Выглядит как обычная аутентификация</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4768 с RC4 encryption</li>
+                                    <li class="detail-item">Необычное время входа</li>
+                                    <li class="detail-item">Аномальный источник запроса</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1550.002</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🔐</span>
+                    <h2 class="category-title">Privilege Escalation</h2>
+                </div>
+                <div class="attacks-grid">
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">AdminSDHolder Abuse</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Модификация AdminSDHolder для persistence в привилегированных группах
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Изменение ACL AdminSDHolder</li>
+                                    <li class="detail-item">SDProp распространяет права</li>
+                                    <li class="detail-item">Persistence через 60 минут</li>
+                                    <li class="detail-item">Влияет на protected groups</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 5136 на AdminSDHolder</li>
+                                    <li class="detail-item">Изменения nTSecurityDescriptor</li>
+                                    <li class="detail-item">Мониторинг protected groups ACL</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1078.002</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">SID History Injection</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Добавление привилегированных SID в SIDHistory для повышения прав
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Требует DA или эквивалент</li>
+                                    <li class="detail-item">Добавление Enterprise Admin SID</li>
+                                    <li class="detail-item">Работает через trust границы</li>
+                                    <li class="detail-item">Persistence механизм</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4765, 4766</li>
+                                    <li class="detail-item">Аномальные SIDHistory значения</li>
+                                    <li class="detail-item">Cross-domain SIDs</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1134.005</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">GPO Abuse</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Создание или модификация Group Policy для выполнения кода или persistence
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Создание вредоносных GPO</li>
+                                    <li class="detail-item">Scheduled tasks через GPO</li>
+                                    <li class="detail-item">Immediate tasks для RCE</li>
+                                    <li class="detail-item">Computer/User startup scripts</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 5136, 5137 (GPO changes)</li>
+                                    <li class="detail-item">Новые GPO в домене</li>
+                                    <li class="detail-item">Изменения в SYSVOL</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1484.001</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🌐</span>
+                    <h2 class="category-title">Lateral Movement</h2>
+                </div>
+                <div class="attacks-grid">
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">Pass-the-Hash</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Использование NTLM хешей для аутентификации без знания пароля
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Извлечение NTLM из LSASS</li>
+                                    <li class="detail-item">Использование в SMB/RDP</li>
+                                    <li class="detail-item">WMI/PSExec для выполнения</li>
+                                    <li class="detail-item">Mimikatz sekurlsa::pth</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Event ID 4624 Type 3 NTLM</li>
+                                    <li class="detail-item">Аномальные NTLM connections</li>
+                                    <li class="detail-item">Pass-the-hash tools в памяти</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1550.002</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">Pass-the-Ticket</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Кража и повторное использование Kerberos tickets
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Экспорт tickets из памяти</li>
+                                    <li class="detail-item">Импорт в другой сессии</li>
+                                    <li class="detail-item">Обход повторной аутентификации</li>
+                                    <li class="detail-item">TGT/TGS manipulation</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Unusual ticket usage patterns</li>
+                                    <li class="detail-item">Same ticket from multiple IPs</li>
+                                    <li class="detail-item">Event ID 4768/4769 anomalies</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1550.003</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-medium">
+                        <div class="attack-header">
+                            <span class="attack-name">DCOM Lateral Movement</span>
+                            <span class="severity-badge">MEDIUM</span>
+                        </div>
+                        <div class="attack-desc">
+                            Использование DCOM для удаленного выполнения кода
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">MMC20.Application COM object</li>
+                                    <li class="detail-item">ShellWindows/ShellBrowserWindow</li>
+                                    <li class="detail-item">Excel.Application для RCE</li>
+                                    <li class="detail-item">Outlook.Application abuse</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">DCOM network connections</li>
+                                    <li class="detail-item">Sysmon Event ID 11 (RPC)</li>
+                                    <li class="detail-item">Unusual mmc.exe spawns</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1021.003</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-section">
+                <div class="category-header">
+                    <span class="category-icon">🎭</span>
+                    <h2 class="category-title">Persistence & Defense Evasion</h2>
+                </div>
+                <div class="attacks-grid">
+                    <div class="attack-card severity-critical">
+                        <div class="attack-header">
+                            <span class="attack-name">Skeleton Key</span>
+                            <span class="severity-badge">CRITICAL</span>
+                        </div>
+                        <div class="attack-desc">
+                            Инъекция "мастер-пароля" в LSASS на Domain Controller
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Требует доступ к DC</li>
+                                    <li class="detail-item">Patch LSASS в памяти</li>
+                                    <li class="detail-item">Работает пароль "mimikatz"</li>
+                                    <li class="detail-item">Не меняет реальные пароли</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">LSASS memory modifications</li>
+                                    <li class="detail-item">System event 7045 (service)</li>
+                                    <li class="detail-item">Successful logons с известным паролем</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1556.001</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-high">
+                        <div class="attack-header">
+                            <span class="attack-name">DCShadow</span>
+                            <span class="severity-badge">HIGH</span>
+                        </div>
+                        <div class="attack-desc">
+                            Регистрация rogue Domain Controller для изменения AD объектов
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Регистрация fake DC</li>
+                                    <li class="detail-item">Изменение объектов через репликацию</li>
+                                    <li class="detail-item">Обход логирования</li>
+                                    <li class="detail-item">Удаление следов</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Новые nTDSDSA объекты</li>
+                                    <li class="detail-item">Event ID 4742 (computer changes)</li>
+                                    <li class="detail-item">Unusual replication sources</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1207</div>
+                        </div>
+                    </div>
+                    
+                    <div class="attack-card severity-medium">
+                        <div class="attack-header">
+                            <span class="attack-name">DSRM Password Abuse</span>
+                            <span class="severity-badge">MEDIUM</span>
+                        </div>
+                        <div class="attack-desc">
+                            Использование Directory Services Restore Mode пароля для persistence
+                        </div>
+                        <div class="attack-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Техника атаки:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Изменение DsrmAdminLogonBehavior</li>
+                                    <li class="detail-item">Вход как локальный администратор</li>
+                                    <li class="detail-item">Работает на DC</li>
+                                    <li class="detail-item">Обход domain policies</li>
+                                </ul>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🛡️ Детекция:</div>
+                                <ul class="detail-list">
+                                    <li class="detail-item">Registry changes in HKLM\System</li>
+                                    <li class="detail-item">Local logons на DC</li>
+                                    <li class="detail-item">DSRM password changes</li>
+                                </ul>
+                            </div>
+                            <div class="mitre-tag">T1003.003</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detection-matrix">
+            <h2 class="matrix-title">📊 Key Windows Events для детекции AD атак</h2>
+            <div class="detection-grid">
+                <div class="detection-card">
+                    <div class="detection-icon">🔐</div>
+                    <div class="detection-name">Authentication Events</div>
+                    <ul class="event-list">
+                        <li class="event-item">
+                            <span class="event-id">4624</span>
+                            <span class="event-desc">Successful logon</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4625</span>
+                            <span class="event-desc">Failed logon</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4768</span>
+                            <span class="event-desc">Kerberos TGT request</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4769</span>
+                            <span class="event-desc">Kerberos service ticket</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4771</span>
+                            <span class="event-desc">Kerberos pre-auth failed</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="detection-card">
+                    <div class="detection-icon">👥</div>
+                    <div class="detection-name">Account Management</div>
+                    <ul class="event-list">
+                        <li class="event-item">
+                            <span class="event-id">4720</span>
+                            <span class="event-desc">User account created</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4728</span>
+                            <span class="event-desc">Member added to group</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4732</span>
+                            <span class="event-desc">Member added to local group</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4756</span>
+                            <span class="event-desc">Member added to universal group</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4767</span>
+                            <span class="event-desc">User account unlocked</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="detection-card">
+                    <div class="detection-icon">🛡️</div>
+                    <div class="detection-name">Privilege Use</div>
+                    <ul class="event-list">
+                        <li class="event-item">
+                            <span class="event-id">4672</span>
+                            <span class="event-desc">Special privileges assigned</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4673</span>
+                            <span class="event-desc">Privileged service called</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">4674</span>
+                            <span class="event-desc">Operation attempted on object</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="detection-card">
+                    <div class="detection-icon">📝</div>
+                    <div class="detection-name">Directory Service</div>
+                    <ul class="event-list">
+                        <li class="event-item">
+                            <span class="event-id">4662</span>
+                            <span class="event-desc">Directory service access</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">5136</span>
+                            <span class="event-desc">Directory object modified</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">5137</span>
+                            <span class="event-desc">Directory object created</span>
+                        </li>
+                        <li class="event-item">
+                            <span class="event-id">5141</span>
+                            <span class="event-desc">Directory object deleted</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tools-section">
+            <h2 class="tools-title">🛠️ AD Attack & Defense Tools</h2>
+            <div class="tools-categories">
+                <div class="tool-category">
+                    <div class="tool-name">🔴 Attack Tools</div>
+                    <div class="tool-desc">
+                        Mimikatz - credential extraction, ticket manipulation<br>
+                        Rubeus - Kerberos abuse toolkit<br>
+                        BloodHound - AD relationship mapping<br>
+                        PowerSploit - PowerShell post-exploitation<br>
+                        Impacket - Python AD exploitation
+                    </div>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="tool-name">🔵 Defense Tools</div>
+                    <div class="tool-desc">
+                        Microsoft ATA/Defender for Identity<br>
+                        PingCastle - AD security assessment<br>
+                        Purple Knight - AD security scanner<br>
+                        ADACLScanner - Permission auditing<br>
+                        Forest Druid - AD hardening
+                    </div>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="tool-name">🟢 Detection Tools</div>
+                    <div class="tool-desc">
+                        Sysmon - Enhanced Windows logging<br>
+                        WEF - Windows Event Forwarding<br>
+                        Palantir - Windows Event Log analysis<br>
+                        DeepBlueCLI - PowerShell event analysis<br>
+                        ADRecon - AD reconnaissance detection
+                    </div>
+                </div>
+                
+                <div class="tool-category">
+                    <div class="tool-name">🟡 Monitoring Tools</div>
+                    <div class="tool-desc">
+                        Event ID 4662 monitoring scripts<br>
+                        Honeytokens/Honeypots for AD<br>
+                        Canary tokens in AD objects<br>
+                        AD change monitoring solutions<br>
+                        SIEM correlation rules for AD
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
