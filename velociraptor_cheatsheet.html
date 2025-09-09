@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка по артефактам Velociraptor для Windows</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        .category {
+            margin: 30px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .category-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .artifact {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+        .artifact:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .artifact-name {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .artifact-name::before {
+            content: "🔍";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .description {
+            color: #555;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .indicators {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #3498db;
+        }
+        .use-cases {
+            background: #f0f8e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #27ae60;
+        }
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        .code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .toc {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .toc ul {
+            columns: 2;
+            column-gap: 30px;
+        }
+        .toc li {
+            margin: 5px 0;
+            break-inside: avoid;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦕 Velociraptor Windows Artifacts</h1>
+            <div class="subtitle">Шпаргалка по артефактам для цифровой криминалистики и реагирования на инциденты</div>
+        </div>
+
+        <div class="toc">
+            <h3>📋 Содержание</h3>
+            <ul>
+                <li><a href="#lateral-movement">Латеральное передвижение</a></li>
+                <li><a href="#powershell">PowerShell активность</a></li>
+                <li><a href="#hashes">Хэширование файлов</a></li>
+                <li><a href="#network">Сетевые соединения</a></li>
+                <li><a href="#logs">Работа с логами</a></li>
+                <li><a href="#files">Доступ к файлам и эксфильтрация</a></li>
+                <li><a href="#processes">Процессы и задачи</a></li>
+                <li><a href="#autostart">Автозагрузка и реестр</a></li>
+            </ul>
+        </div>
+
+        <div class="category" id="lateral-movement">
+            <div class="category-header">🔄 Латеральное передвижение</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Packs.LateralMovement</div>
+                <div class="description">Комплексный пакет для обнаружения признаков латерального движения в сети</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Хэши исполняемых файлов<br>
+                    • Информация о версиях программ<br>
+                    • Временные метки первого запуска<br>
+                    • Цифровые подписи и издатели
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Инвентаризация установленного ПО<br>
+                    • Обнаружение несанкционированных программ<br>
+                    • Анализ временной линии установки ПО
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Registry.Sysinternals</div>
+                <div class="description">Обнаруживает использование утилит Sysinternals через записи в реестре</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • EULA acceptance записи<br>
+                    • История использования PsExec, PsTools<br>
+                    • Временные метки первого запуска
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение использования administrative tools<br>
+                    • Анализ lateral movement via PsExec<br>
+                    • Поиск legitimate tools used maliciously
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">🎯 Специализированные артефакты</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Detection.Yara</div>
+                <div class="description">Сканирует файлы и память с помощью YARA правил для обнаружения малвари</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Совпадения с YARA правилами<br>
+                    • Сигнатуры известного малвари<br>
+                    • Подозрительные строки и паттерны<br>
+                    • Packer detections
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение известного и неизвестного малвари<br>
+                    • Охота на угрозы<br>
+                    • Валидация IOC
+                </div>
+                <div class="code">Windows.Detection.Yara</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.Prefetch</div>
+                <div class="description">Анализирует Prefetch файлы для определения выполнявшихся программ</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Программы, которые выполнялись<br>
+                    • Количество запусков<br>
+                    • Временные метки последнего запуска<br>
+                    • Загруженные DLL и файлы
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Доказательство выполнения программ<br>
+                    • Анализ частоты использования<br>
+                    • Восстановление execution timeline
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.UserAccessLogs</div>
+                <div class="description">Собирает различные логи пользовательской активности</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • USB device usage<br>
+                    • Network drive mappings<br>
+                    • Printer usage<br>
+                    • Application launches
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Профилирование пользовательской активности<br>
+                    • Обнаружение data theft via USB<br>
+                    • Анализ insider threats
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Timeline.Registry</div>
+                <div class="description">Создает временную линию на основе временных меток реестра</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Ключи реестра с временными метками<br>
+                    • Последние изменения в системе<br>
+                    • Install/uninstall активность<br>
+                    • Configuration changes
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Построение таймлайна инцидента<br>
+                    • Анализ системных изменений<br>
+                    • Корреляция событий
+                </div>
+            </div>
+        </div>
+
+        <div class="category">
+            <div class="category-header">📊 Пакеты для комплексного анализа</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Packs.MalwareMiner</div>
+                <div class="description">Комплексный пакет для обнаружения и анализа малвари</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Подозрительные процессы<br>
+                    • Сетевые соединения с C2<br>
+                    • Файлы без цифровых подписей<br>
+                    • Persistence механизмы
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Быстрая оценка зараженности системы<br>
+                    • Triage анализ<br>
+                    • Массовое сканирование endpoints
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Packs.RansomwareHunt</div>
+                <div class="description">Специализированный пакет для обнаружения активности ransomware</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Массовое переименование файлов<br>
+                    • Создание ransom notes<br>
+                    • Удаление shadow copies<br>
+                    • Шифрование файлов
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Раннее обнаружение ransomware<br>
+                    • Анализ post-incident<br>
+                    • Оценка масштаба шифрования
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #667eea;">
+            <h3>💡 Советы по использованию</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li><strong>Комбинируйте артефакты:</strong> Используйте несколько артефактов для получения полной картины</li>
+                <li><strong>Фильтруйте результаты:</strong> Применяйте VQL фильтры для сокращения ложных срабатываний</li>
+                <li><strong>Временные рамки:</strong> Ограничивайте поиск временными рамками инцидента</li>
+                <li><strong>Baseline сравнение:</strong> Сравнивайте с нормальным состоянием системы</li>
+                <li><strong>Корреляция:</strong> Сопоставляйте данные из разных артефактов для выявления связей</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center; color: #666; font-size: 0.9em; border-top: 2px solid #667eea; padding-top: 20px;">
+            <p><strong>Velociraptor</strong> - мощный инструмент для цифровой криминалистики и реагирования на инциденты</p>
+            <p>Документация: <a href="https://docs.velociraptor.app/" style="color: #667eea;">https://docs.velociraptor.app/</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность для улучшения UX
+        document.querySelectorAll('.artifact').forEach(artifact => {
+            artifact.addEventListener('click', function() {
+                this.style.transform = this.style.transform === 'scale(1.02)' ? 'scale(1)' : 'scale(1.02)';
+            });
+        });
+
+        // Плавная прокрутка для ссылок TOC
+        document.querySelectorAll('.toc a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>ы:</div>
+                    • Альтернативные логоны (logon type 3, 9, 10)<br>
+                    • Использование WMIC для удаленного выполнения<br>
+                    • Записи в ShimCache и BAM<br>
+                    • Следы в AmCache
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Расследование APT атак<br>
+                    • Поиск внутренних угроз<br>
+                    • Анализ распространения малвари
+                </div>
+                <div class="code">Windows.Packs.LateralMovement</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.EventLogs.AlternateLogon</div>
+                <div class="description">Анализирует события альтернативных входов в систему через Event ID 4624/4625</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Logon Type 3 (сетевой вход)<br>
+                    • Logon Type 9 (NewCredentials)<br>
+                    • Logon Type 10 (RemoteInteractive)<br>
+                    • Необычные источники входа
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение Pass-the-Hash атак<br>
+                    • Анализ RDP подключений<br>
+                    • Поиск злоупотребления учетными данными
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Detection.WMIProcessCreation</div>
+                <div class="description">Отслеживает создание процессов через WMI - популярный метод для латерального движения</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Event ID 4688 с PPID wmiprvse.exe<br>
+                    • Удаленное выполнение команд<br>
+                    • Подозрительные процессы через WMI
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Детекция WMI persistence<br>
+                    • Обнаружение удаленного выполнения кода<br>
+                    • Анализ Living off the Land техник
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="powershell">
+            <div class="category-header">⚡ PowerShell активность</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.EventLogs.PowershellScriptblock</div>
+                <div class="description">Собирает логи PowerShell Script Block (Event ID 4104) для анализа выполненных команд</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Обфусцированные команды<br>
+                    • Base64 кодирование<br>
+                    • Подозрительные cmdlets (Invoke-Expression, DownloadString)<br>
+                    • Bypassing execution policy
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Анализ malicious PowerShell<br>
+                    • Расследование fileless малвари<br>
+                    • Обнаружение Empire/Cobalt Strike
+                </div>
+                <div class="code">Windows.EventLogs.PowershellScriptblock</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.PowerShellTranscripts</div>
+                <div class="description">Извлекает PowerShell транскрипты, содержащие полные записи сессий</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Файлы в C:\Users\*\Documents\PowerShell_transcript.*<br>
+                    • Записи команд и их вывода<br>
+                    • Временные метки выполнения
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Полное восстановление PowerShell сессий<br>
+                    • Анализ действий администраторов<br>
+                    • Форензика интерактивных сессий
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.System.PowerShell</div>
+                <div class="description">Позволяет выполнять PowerShell команды удаленно для сбора артефактов</div>
+                <div class="warning">⚠️ Внимание: Этот артефакт выполняет команды на удаленной системе с правами SYSTEM</div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Быстрое получение информации о системе<br>
+                    • Сбор специфических артефактов<br>
+                    • Проверка IOC на endpoints
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="hashes">
+            <div class="category-header">🔐 Хэширование файлов</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.FilenameSearch</div>
+                <div class="description">Поиск файлов и вычисление их хэшей для анализа вредоносного ПО</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • MD5, SHA1, SHA256 хэши<br>
+                    • Размеры файлов<br>
+                    • Временные метки<br>
+                    • Цифровые подписи
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Проверка IOC хэшей<br>
+                    • Поиск известного малвари<br>
+                    • Верификация целостности файлов
+                </div>
+                <div class="code">Windows.Forensics.FilenameSearch</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.HashRunningProcesses</div>
+                <div class="description">Вычисляет хэши исполняемых файлов всех запущенных процессов</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Хэши PE файлов активных процессов<br>
+                    • Пути к исполняемым файлам<br>
+                    • PID процессов
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Быстрая проверка running processes против IOC<br>
+                    • Обнаружение процессов без подписи<br>
+                    • Анализ memory resident threats
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="network">
+            <div class="category-header">🌐 Сетевые соединения</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Network.Netstat</div>
+                <div class="description">Показывает активные TCP/UDP соединения и прослушиваемые порты</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Подозрительные внешние соединения<br>
+                    • Необычные прослушиваемые порты<br>
+                    • C2 каналы связи<br>
+                    • Backdoor соединения
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение C2 трафика<br>
+                    • Поиск backdoors<br>
+                    • Анализ сетевой активности малвари
+                </div>
+                <div class="code">Windows.Network.Netstat</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Network.ArpCache</div>
+                <div class="description">Извлекает ARP таблицу для анализа сетевых взаимодействий</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • MAC адреса соседних устройств<br>
+                    • IP адреса в локальной сети<br>
+                    • Временные метки ARP записей
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Реконструкция сетевой топологии<br>
+                    • Поиск rogue устройств<br>
+                    • Анализ латерального движения
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Network.NetworkConnections</div>
+                <div class="description">Расширенный анализ сетевых соединений с привязкой к процессам</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Процессы с сетевой активностью<br>
+                    • Удаленные IP адреса<br>
+                    • Порты и протоколы<br>
+                    • Состояние соединений
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Корреляция процессов и сетевого трафика<br>
+                    • Обнаружение process hollowing<br>
+                    • Анализ C2 коммуникаций
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="logs">
+            <div class="category-header">📝 Работа с логами</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.EventLogs.ClearedEventLogs</div>
+                <div class="description">Обнаруживает события очистки журналов событий (Event ID 1102, 104)</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Event ID 1102 (Security log cleared)<br>
+                    • Event ID 104 (System log cleared)<br>
+                    • Пользователи, очистившие логи<br>
+                    • Временные метки очистки
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение попыток сокрытия следов<br>
+                    • Анализ anti-forensics техник<br>
+                    • Расследование инсайдерских угроз
+                </div>
+                <div class="code">Windows.EventLogs.ClearedEventLogs</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.EventLogs.ModifiedLogonEvents</div>
+                <div class="description">Анализирует события входа в систему для выявления аномалий</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Необычные времена входа<br>
+                    • Географически аномальные входы<br>
+                    • Множественные неудачные попытки входа<br>
+                    • Escalation of privileges
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение brute force атак<br>
+                    • Анализ компрометации учетных записей<br>
+                    • Поиск privilege escalation
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="files">
+            <div class="category-header">📁 Доступ к файлам и эксфильтрация</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.Lnk</div>
+                <div class="description">Анализирует LNK файлы для восстановления истории доступа к файлам</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Пути к целевым файлам<br>
+                    • MAC times доступа<br>
+                    • Рабочие директории<br>
+                    • Командные параметры
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Восстановление удаленных файлов<br>
+                    • Анализ пользовательской активности<br>
+                    • Поиск следов эксфильтрации
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.RecentFiles</div>
+                <div class="description">Извлекает списки недавно открытых файлов из различных источников</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Реестр RecentDocs<br>
+                    • JumpLists<br>
+                    • Office Recent Files<br>
+                    • Browser Downloads
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Анализ доступа к чувствительным данным<br>
+                    • Поиск эксфильтрированных файлов<br>
+                    • Реконструкция пользовательской активности
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.NTFS</div>
+                <div class="description">Глубокий анализ файловой системы NTFS, включая удаленные файлы</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • MFT записи<br>
+                    • Удаленные файлы<br>
+                    • Альтернативные потоки данных (ADS)<br>
+                    • File slack и unallocated space
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Восстановление удаленных данных<br>
+                    • Поиск скрытой информации в ADS<br>
+                    • Таймлайн анализ файловой активности
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="processes">
+            <div class="category-header">⚙️ Процессы и задачи</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.System.Pslist</div>
+                <div class="description">Получает детальную информацию обо всех запущенных процессах</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • PID и PPID процессов<br>
+                    • Командные строки<br>
+                    • Пользователи запуска<br>
+                    • Время создания процессов
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение подозрительных процессов<br>
+                    • Анализ process injection<br>
+                    • Поиск fileless малвари
+                </div>
+                <div class="code">Windows.System.Pslist</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.System.TaskScheduler</div>
+                <div class="description">Анализирует запланированные задачи для поиска persistence механизмов</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Подозрительные scheduled tasks<br>
+                    • Задачи с системными привилегиями<br>
+                    • Необычные триггеры запуска<br>
+                    • Скрытые или замаскированные задачи
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение persistence<br>
+                    • Анализ privilege escalation<br>
+                    • Поиск backdoors
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.System.Services</div>
+                <div class="description">Перечисляет все системные службы и их конфигурации</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Подозрительные службы<br>
+                    • Службы без цифровых подписей<br>
+                    • Измененные системные службы<br>
+                    • Rogue services
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение service-based persistence<br>
+                    • Анализ rootkits<br>
+                    • Поиск backdoor служб
+                </div>
+            </div>
+        </div>
+
+        <div class="category" id="autostart">
+            <div class="category-header">🔧 Автозагрузка и реестр</div>
+            
+            <div class="artifact">
+                <div class="artifact-name">Windows.Sys.StartupItems</div>
+                <div class="description">Собирает все элементы автозапуска из различных источников</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Run/RunOnce ключи реестра<br>
+                    • Startup папки<br>
+                    • Logon scripts<br>
+                    • Shell extensions
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Обнаружение автозапуска малвари<br>
+                    • Анализ persistence методов<br>
+                    • Поиск unwanted software
+                </div>
+                <div class="code">Windows.Sys.StartupItems</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Registry.NTUser</div>
+                <div class="description">Анализирует пользовательские ульи реестра (NTUSER.DAT)</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Пользовательские настройки<br>
+                    • Recently used программы<br>
+                    • Подозрительные ключи реестра<br>
+                    • Malware persistence
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Профилирование пользователей<br>
+                    • Поиск user-level persistence<br>
+                    • Анализ пользовательского поведения
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Registry.AppCompatCache</div>
+                <div class="description">Извлекает ShimCache (Application Compatibility Cache) для анализа выполнения программ</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Список выполнявшихся программ<br>
+                    • Временные метки последнего изменения<br>
+                    • Пути к исполняемым файлам<br>
+                    • Размеры файлов
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Таймлайн выполнения программ<br>
+                    • Обнаружение удаленного малвари<br>
+                    • Анализ system-wide execution
+                </div>
+                <div class="code">Windows.Registry.AppCompatCache</div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.Forensics.Bam</div>
+                <div class="description">Анализирует Background Activity Moderator для отслеживания запуска программ</div>
+                <div class="indicators">
+                    <div class="label">Индикаторы:</div>
+                    • Точные временные метки запуска<br>
+                    • Пользователи, запускавшие программы<br>
+                    • Полные пути к исполняемым файлам
+                </div>
+                <div class="use-cases">
+                    <div class="label">Применение:</div>
+                    • Детальный анализ execution timeline<br>
+                    • Корреляция с другими артефактами<br>
+                    • Обнаружение кратковременного выполнения малвари
+                </div>
+            </div>
+
+            <div class="artifact">
+                <div class="artifact-name">Windows.System.Amcache</div>
+                <div class="description">Анализирует AmCache.hve для получения информации об установленных программах</div>
+                <div class="indicators">
+                    <div class="label">Индикатор

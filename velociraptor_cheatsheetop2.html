@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Velociraptor Windows — шпаргалка по артефактам DFIR</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root { --bg:#0b0f14; --fg:#e7f0ff; --muted:#a8b3c7; --accent:#8ad0ff; --dim:#1b2430; }
+  html,body{background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:0}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  header{padding:24px 20px;border-bottom:1px solid var(--dim);background:#0d1219;position:sticky;top:0;z-index:1}
+  h1{margin:0 0 6px 0;font-size:22px}
+  .subtitle{color:var(--muted);font-size:13px}
+  main{padding:28px 20px 60px;max-width:1200px;margin:0 auto}
+  section{margin:28px 0;border:1px solid var(--dim);border-radius:12px;overflow:hidden}
+  section>h2{margin:0;padding:14px 16px;background:#0f1621;border-bottom:1px solid var(--dim);font-size:18px}
+  .hint{padding:10px 16px;color:#cfe1ff;background:#0e1520;border-bottom:1px solid var(--dim)}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  th,td{vertical-align:top;text-align:left;padding:10px 12px;border-bottom:1px solid var(--dim)}
+  th{position:sticky;top:58px;background:#0e1520;font-weight:600}
+  tr:hover td{background:#0c131d}
+  code{background:#0d1520;padding:2px 6px;border-radius:6px}
+  ul{margin:6px 0 0 18px;padding:0}
+  .mono{font-family:ui-monospace,Consolas,Menlo,monospace}
+  .tag{display:inline-block;padding:2px 8px;border:1px solid var(--dim);border-radius:999px;margin-right:6px;color:#bcd0ea;font-size:12px}
+  footer{margin-top:28px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Velociraptor под Windows — большая шпаргалка DFIR</h1>
+  <div class="subtitle">Артефакты → индикаторы → когда применять. Чистый HTML, без лишней боли.</div>
+</header>
+<main>
+
+<!-- =========================================================== -->
+<section id="nav">
+  <h2>Быстрые теги по темам</h2>
+  <div style="padding:10px 16px">
+    <span class="tag">Латеральное перемещение</span>
+    <span class="tag">PowerShell</span>
+    <span class="tag">Сети и C2</span>
+    <span class="tag">Удаление/отключение логов</span>
+    <span class="tag">Файлы, доступ, эксфиль</span>
+    <span class="tag">Процессы и задания</span>
+    <span class="tag">Планировщик</span>
+    <span class="tag">Автозапуски и реестр</span>
+    <span class="tag">Хэши и IOC</span>
+  </div>
+</section>
+
+<!-- =========================================================== -->
+<section id="lateral">
+  <h2>Латеральное перемещение</h2>
+  <div class="hint">
+    Фокус: явные логины под другими учётками, WMIC/SC/Service Creation, RDP/WinRM, скрытые таски. Источники: Security/System EVTX, Prefetch, Amcache/BAM, RDP артефакты.
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Артефакт</th>
+        <th>Ищет</th>
+        <th>Индикаторы</th>
+        <th>Когда применять</th>
+        <th>Быстрый запуск</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.Packs.LateralMovement</td>
+        <td>
+          <ul>
+            <li>Сводная охота по lateral movement</li>
+            <li>Подтягивает AlternateLogon, Prefetch/Amcache/BAM по <code>wmic.exe</code></li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li>Частые 4648 (explicit creds)</li>
+            <li>Следы WMIC в Prefetch/Amcache/BAM</li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li>Быстрый старт расследования «кто шарился по сети»</li>
+          </ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.Packs.LateralMovement()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.ExplicitLogon</td>
+        <td>
+          <ul><li>Security 4648 — явный логон с другими учетными данными</li></ul>
+        </td>
+        <td>
+          <ul>
+            <li>Процессы <span class="mono">runas.exe</span>, <span class="mono">wmic.exe</span>, сетевые маппинги</li>
+          </ul>
+        </td>
+        <td>
+          <ul><li>Подтвердить lateral из исходной машины</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.ExplicitLogon()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.AlternateLogon</td>
+        <td>
+          <ul><li>Логины с альтернативными учетками при NLA</li></ul>
+        </td>
+        <td>
+          <ul><li>Текущее имя пользователя vs. Альтернативное</li></ul>
+        </td>
+        <td>
+          <ul><li>Поиск скрытых админских ходов</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.AlternateLogon()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.ServiceCreationComspec</td>
+        <td>
+          <ul><li>System 7045, признак <code>COMSPEC</code> в создании сервисов</li></ul>
+        </td>
+        <td>
+          <ul><li>SCM-лкмты: <span class="mono">smbexec</span>, PsExec-подобные</li></ul>
+        </td>
+        <td>
+          <ul><li>Детект перемещения через сервисы</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.ServiceCreationComspec()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.RDPAuth</td>
+        <td>
+          <ul><li>RDP: 1149, 21–25, 39–40, 4624/4634/4625/4778/4779/4647</li></ul>
+        </td>
+        <td>
+          <ul><li>Необычные источники, типы логона 3/7/10</li></ul>
+        </td>
+        <td>
+          <ul><li>Подтвердить RDP-перемещение</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.RDPAuth()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.RDP</td>
+        <td>
+          <ul><li>MRU и список серверов RDP из NTUSER.DAT</li></ul>
+        </td>
+        <td>
+          <ul><li>UsernameHint, CertHash</li></ul>
+        </td>
+        <td>
+          <ul><li>Атрибуция направлений RDP-сессий</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.RDP()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.TaskCache.HiddenTasks</td>
+        <td>
+          <ul><li>Задачи без Security Descriptor (скрытые)</li></ul>
+        </td>
+        <td>
+          <ul><li>Трюк Tarrask: скрытие задач</li></ul>
+        </td>
+        <td>
+          <ul><li>Обход стандартных средств просмотра задач</li></ul>
+        </td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.TaskCache.HiddenTasks()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="powershell">
+  <h2>PowerShell: исполнение и артефакты</h2>
+  <div class="hint">
+    Основное: ScriptBlock/Module логи, кэш модулей, PSReadline, профили/реестр PowerShell для персистентности.
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.PowershellScriptblock</td>
+        <td>
+          <ul><li>ScriptBlock (обфускация, загрузчики, AMSI-байпас)</li></ul>
+        </td>
+        <td>
+          <ul><li>Base64 <span class="mono">-enc</span>, <span class="mono">IEX(…)</span>, web-загрузки</li></ul>
+        </td>
+        <td><ul><li>Контент фактических PS-скриптов</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.PowershellModule</td>
+        <td><ul><li>Загрузка модулей PowerShell</li></ul></td>
+        <td><ul><li>Необычные модули, пути из %TEMP%</li></ul></td>
+        <td><ul><li>Таймлайн по модулям</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.PowershellModule()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.System.Powershell.ModuleAnalysisCache</td>
+        <td><ul><li>Кэш анализа модулей (метаданные)</li></ul></td>
+        <td><ul><li>Следы ранее загруженных модулей</li></ul></td>
+        <td><ul><li>Когда журналов не хватает</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.System.Powershell.PSReadline</td>
+        <td><ul><li>История команд PSReadline</li></ul></td>
+        <td><ul><li>Ручной ввод атакера</li></ul></td>
+        <td><ul><li>Реконструкция TTP руками</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.Powershell.PSReadline()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Persistence.PowershellProfile</td>
+        <td><ul><li>Профили PS (автозапуск скриптов)</li></ul></td>
+        <td><ul><li>Вставки <span class="mono">IEX</span>, web-dl, alias-перехваты</li></ul></td>
+        <td><ul><li>Поиск персистентности в профилях</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Persistence.PowershellProfile()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Persistence.PowershellRegistry</td>
+        <td><ul><li>Якоря PS в профиле пользователя (реестр)</li></ul></td>
+        <td><ul><li>YARA-сигнатуры на следы PS-персистентности</li></ul></td>
+        <td><ul><li>Персистентность без файлов</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Persistence.PowershellRegistry()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="network">
+  <h2>Сети, C2 и исходящие соединения</h2>
+  <div class="hint">
+    Снимки соединений и портов, DNS-кэш/ETW, правила FW, PortProxy, артефакты удалённого доступа (RDP/TeamViewer/AnyDesk), SRUM для сетевой активности.
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.Network.Netstat / NetstatEnriched</td>
+        <td><ul><li>Текущие соединения/процессы/порты</li></ul></td>
+        <td><ul><li>Необычные внешние IP/домены, локальные биндинги</li></ul></td>
+        <td><ul><li>Живой срез C2/туннелей</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Network.NetstatEnriched()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Network.ListeningPorts</td>
+        <td><ul><li>Локальные слушающие сокеты</li></ul></td>
+        <td><ul><li>Инжект в легитимные процессы</li></ul></td>
+        <td><ul><li>Поиск бэкдоров/прокси</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Network.ListeningPorts()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.System.DNSCache</td>
+        <td><ul><li>Кэш резолвов</li></ul></td>
+        <td><ul><li>Динамика доменов, DGAs</li></ul></td>
+        <td><ul><li>Корреляция с соединениями</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.DNSCache()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Sys.FirewallRules</td>
+        <td><ul><li>Правила Windows Firewall из реестра</li></ul></td>
+        <td><ul><li>Неожиданные allow-исключения</li></ul></td>
+        <td><ul><li>Проверка обходов/дырок</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Sys.FirewallRules()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.PortProxy</td>
+        <td><ul><li>Проброс портов <span class="mono">netsh interface portproxy</span></li></ul></td>
+        <td><ul><li>Локальные → удалённые форварды</li></ul></td>
+        <td><ul><li>Детект локальных туннелей</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.PortProxy()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Detection.ProxyHunter</td>
+        <td><ul><li>Командные строки прокси-инструментов, активные коннекты, PortProxy</li></ul></td>
+        <td><ul><li><span class="mono">chisel</span>, <span class="mono">frp</span>, <span class="mono">iodine</span> и т. п.</li></ul></td>
+        <td><ul><li>Быстрый сэч по проксям</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Detection.ProxyHunter()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.SRUM</td>
+        <td><ul><li>SRUM ESE: сеть/приложения (в т. ч. GUID сети)</li></ul></td>
+        <td><ul><li>Объёмы трафика, периодика C2</li></ul></td>
+        <td><ul><li>Ретро по эксфилю/сетевой активности</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.SRUM()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Applications.TeamViewer.Incoming</td>
+        <td><ul><li>Логи входящих соединений TeamViewer</li></ul></td>
+        <td><ul><li>ID, источники, тайминги</li></ul></td>
+        <td><ul><li>Неавторизованный RAS</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Applications.TeamViewer.Incoming()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Applications.AnyDesk</td>
+        <td><ul><li>Парсинг логов AnyDesk</li></ul></td>
+        <td><ul><li>IP-источники, ID, передачи файлов</li></ul></td>
+        <td><ul><li>Аудит альтернативного удалённого доступа</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Applications.AnyDesk()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Carving.CobaltStrike</td>
+        <td><ul><li>Извлечение конфигурации CS из дампов/байтов</li></ul></td>
+        <td><ul><li>URL, домены, профили Beacon</li></ul></td>
+        <td><ul><li>Триаж подтверждённого Beacon</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Carving.CobaltStrike()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="logs">
+  <h2>Удаление/отключение логов</h2>
+  <div class="hint">
+    Ищем «кто подмёл следы»: чистка Security/System, отключение каналов через реестр, быстрые греп-охоты по .evtx.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.Cleared</td>
+        <td><ul><li>Security 1102, System 104</li></ul></td>
+        <td><ul><li>Сразу после компрометации/эскалации</li></ul></td>
+        <td><ul><li>Факт чистки журналов</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.Cleared()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Events.EventLogModifications</td>
+        <td><ul><li>Отключение каналов/провайдеров логов через реестр</li></ul></td>
+        <td><ul><li>Отключенные BITS/PowerShell/Defender</li></ul></td>
+        <td><ul><li>Детект антисигнатур атакера</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Events.EventLogModifications()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.Evtx / EvtxHunter</td>
+        <td><ul><li>Парсинг/поиск по .evtx</li></ul></td>
+        <td><ul><li>Быстрая IOC-охота по строкам/ID</li></ul></td>
+        <td><ul><li>Триаж в инциденте</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="files">
+  <h2>Файлы: доступ, следы, эксфильтрация</h2>
+  <div class="hint">
+    Поиск скачиваний и следов доступа, исторические следы существования и изменения, оценка объёма сетевой активности.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.Analysis.EvidenceOfDownload</td>
+        <td><ul><li>ADS <span class="mono">Zone.Identifier</span></li></ul></td>
+        <td><ul><li>«Интернет-происхождение» файлов</li></ul></td>
+        <td><ul><li>Привязка загрузок к пользователю/времени</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Analysis.EvidenceOfDownload()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.Prefetch / Timeline.Prefetch</td>
+        <td><ul><li>Кэш Prefetch, времена запусков</li></ul></td>
+        <td><ul><li>Запуски с внешних дисков/сетевых путей</li></ul></td>
+        <td><ul><li>Подтверждение исполнения утилит эксфиля</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.Prefetch()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.JumpLists / Lnk</td>
+        <td><ul><li>Автожумплисты и .lnk (последний доступ)</li></ul></td>
+        <td><ul><li>Необычные целевые пути</li></ul></td>
+        <td><ul><li>Навигация по рабочим наборам атакера</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.JumpLists()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.Shellbags</td>
+        <td><ul><li>MRU папок/носителей в Explorer</li></ul></td>
+        <td><ul><li>Визиты в каталоги, сетевые шары</li></ul></td>
+        <td><ul><li>Пути к собранным данным</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.Shellbags()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.FilenameSearch</td>
+        <td><ul><li>Поиск по $MFT: существовал ли файл</li></ul></td>
+        <td><ul><li>Следы даже после удаления</li></ul></td>
+        <td><ul><li>IP-theft, утечка, судебка</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.FilenameSearch(FilenameRegex=".*secret.*")</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.Usn</td>
+        <td><ul><li>Журнал USN: модификации/создания</li></ul></td>
+        <td><ul><li>Создание архивов, массовые копии</li></ul></td>
+        <td><ul><li>Файловая активность для эксфиля</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.Usn()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.SRUM</td>
+        <td><ul><li>Сетевой трафик по приложениям</li></ul></td>
+        <td><ul><li>Аномальные объёмы отправки</li></ul></td>
+        <td><ul><li>Подтверждение эксфиля по времени</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.SRUM()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="proc">
+  <h2>Процессы, дерево, отслеживание</h2>
+  <div class="hint">
+    Снимок процессов, цепочки родителей/детей, трекинг процессов (в т. ч. для оффлайн — через Prefetch/Amcache/BAM).
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.System.Pslist</td>
+        <td><ul><li>Текущие процессы</li></ul></td>
+        <td><ul><li>Несоответствие имени и пути</li></ul></td>
+        <td><ul><li>Базовый срез перед киллом</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.Pslist()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Generic.System.Pstree</td>
+        <td><ul><li>Цепочки процессов</li></ul></td>
+        <td><ul><li>WinWord → PowerShell и прочее</li></ul></td>
+        <td><ul><li>Анализ родителя/детей</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Generic.System.Pstree()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Attack.ParentProcess</td>
+        <td><ul><li>Маппинг к MITRE ATT&CK (через трекер процессов)</li></ul></td>
+        <td><ul><li>Спуфинг родителя как техника обхода</li></ul></td>
+        <td><ul><li>Детект подозрительных цепочек</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Attack.ParentProcess()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="scheduler">
+  <h2>Планировщик задач (Scheduled Tasks)</h2>
+  <div class="hint">
+    Две плоскости: XML в <code>C:\Windows\System32\Tasks</code> и записи реестра (TaskCache). Нападения могут скрывать SD, чтобы задачи не видно стандартными способами.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.System.TaskScheduler</td>
+        <td><ul><li>Сводка задач с хоста</li></ul></td>
+        <td><ul><li>Запуски от SYSTEM / логон-триггеры</li></ul></td>
+        <td><ul><li>Общий аудит планировщика</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.TaskScheduler()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.ScheduledTasks</td>
+        <td><ul><li>Данные задач из реестра, даже если XML отсутствует</li></ul></td>
+        <td><ul><li>Несоответствие реестра и файлов</li></ul></td>
+        <td><ul><li>Когда XML подчистили</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.ScheduledTasks()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.EventLogs.ScheduledTasks</td>
+        <td><ul><li>Логи создания/изменения/запуска задач</li></ul></td>
+        <td><ul><li>Новые/модифицированные таски в окно инцидента</li></ul></td>
+        <td><ul><li>Таймлин и корреляция</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.TaskCache.HiddenTasks</td>
+        <td><ul><li>Задачи без SD (скрытые)</li></ul></td>
+        <td><ul><li>Tarrask-подобные техники</li></ul></td>
+        <td><ul><li>Охота за «невидимыми» задачами</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.TaskCache.HiddenTasks()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="autoruns">
+  <h2>Автозапуски, службы, WMI и реестр</h2>
+  <div class="hint">
+    Классические точки персистентности: Run-ключи, службы, WMI Permanent Event Consumers, хуки PowerShell, ShimCache/Amcache как следы исполнения.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Windows.Sys.StartupItems</td>
+        <td><ul><li>Run-ключи и др. автозапуски</li></ul></td>
+        <td><ul><li>Записи на %TEMP%/AppData</li></ul></td>
+        <td><ul><li>Базовый список ASEP</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Sys.StartupItems()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Sysinternals.Autoruns</td>
+        <td><ul><li>Запуск autorunsc.exe и парсинг</li></ul></td>
+        <td><ul><li>Широкий охват автозапусков</li></ul></td>
+        <td><ul><li>Глубокий аудит персистентности</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Sysinternals.Autoruns()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Persistence.PermanentWMIEvents</td>
+        <td><ul><li>WMI Filter/Consumer/Binding</li></ul></td>
+        <td><ul><li>Скриптовые потребители, запуск по событию</li></ul></td>
+        <td><ul><li>Поиск WMI-персистентности</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Persistence.PermanentWMIEvents()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.System.Services / CriticalServices</td>
+        <td><ul><li>Службы, критичные сервисы</li></ul></td>
+        <td><ul><li>Нелегитимные бинарники/пути</li></ul></td>
+        <td><ul><li>Эскалация через сервисы</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.Services()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Registry.AppCompatCache</td>
+        <td><ul><li>ShimCache (следы запуска/наличия)</li></ul></td>
+        <td><ul><li>Факты исторических запусков</li></ul></td>
+        <td><ul><li>Подтвердить исполнение бинарей</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Registry.AppCompatCache()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.System.Amcache</td>
+        <td><ul><li>Amcache.hve: сведения о запуске</li></ul></td>
+        <td><ul><li>Пути, хэши, тайминги</li></ul></td>
+        <td><ul><li>Идентификация ПО атакера</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.System.Amcache()</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="hashes">
+  <h2>Хэши, поиск файлов и IOC-охоты</h2>
+  <div class="hint">
+    Локальная БД хэшей для быстрых запросов, централизованный сбор хэшей на сервере, поиск по файловой системе и по $MFT.
+  </div>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Ищет</th><th>Индикаторы</th><th>Когда применять</th><th>Быстрый запуск</th></tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td class="mono">Generic.Forensic.LocalHashes.Init</td>
+        <td><ul><li>Создаёт локальную БД хэшей</li></ul></td>
+        <td><ul><li>Основа для быстрых запросов</li></ul></td>
+        <td><ul><li>Подготовка к IOC-охоте</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb="hashes.db")</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Generic.Forensic.LocalHashes.Query</td>
+        <td><ul><li>Быстрый поиск по БД хэшей</li></ul></td>
+        <td><ul><li>Списки MD5/SHA1/SHA256</li></ul></td>
+        <td><ul><li>Массовая проверка IOC</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Generic.Forensic.LocalHashes.Query(HashesCSV="hashes.csv")</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Generic.Forensic.HashLookup</td>
+        <td><ul><li>Централизует хэши на сервере</li></ul></td>
+        <td><ul><li>Интеграция с внешней проверкой</li></ul></td>
+        <td><ul><li>Корреляция хэшей из разных сборов</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Generic.Forensic.HashLookup()</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Search.FileFinder</td>
+        <td><ul><li>Гибкий поиск файлов по глобавым маскам/контенту</li></ul></td>
+        <td><ul><li>Полезно для скопированных данных</li></ul></td>
+        <td><ul><li>Поиск утёкших/секретных файлов</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Search.FileFinder(Glob="C:\\Users\\*\\Desktop\\*.zip")</code></td>
+      </tr>
+
+      <tr>
+        <td class="mono">Windows.Forensics.FilenameSearch</td>
+        <td><ul><li>$MFT: существовал ли файл</li></ul></td>
+        <td><ul><li>Следы после удаления</li></ul></td>
+        <td><ul><li>IP-theft/судебка/ретроспектива</li></ul></td>
+        <td><code>SELECT * FROM Artifact.Windows.Forensics.FilenameSearch(FilenameRegex=".*plan.xlsx")</code></td>
+      </tr>
+
+    </tbody>
+  </table>
+</section>
+
+<!-- =========================================================== -->
+<section id="play">
+  <h2>Мини-плейбук корреляции</h2>
+  <div class="hint">
+    Сначала фиксируем факт lateral, затем докручиваем персистентность и эксфиль.
+  </div>
+  <table>
+    <thead><tr><th>Шаг</th><th>Действие</th><th>Цель</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><code>Windows.Packs.LateralMovement</code>, <code>ExplicitLogon</code>, <code>RDPAuth</code></td>
+        <td>Зафиксировать латераль и направление</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><code>ServiceCreationComspec</code>, <code>NetstatEnriched</code>, <code>DNSCache</code></td>
+        <td>Сервисы-прыжки, активные C2</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><code>PS Scriptblock/Module</code>, <code>PSReadline</code></td>
+        <td>Команды атакера/загрузчики</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><code>TaskScheduler</code>, <code>TaskCache.HiddenTasks</code>, <code>StartupItems/Autoruns</code>, <code>PermanentWMIEvents</code></td>
+        <td>Персистентность</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><code>EvidenceOfDownload</code>, <code>Prefetch</code>, <code>Amcache/AppCompatCache</code>, <code>SRUM</code>, <code>Usn</code></td>
+        <td>Инструменты и эксфиль</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><code>EventLogs.Cleared</code>, <code>EventLogModifications</code>, <code>EvtxHunter</code></td>
+        <td>Анти-форенсика</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <p>Собрано и структурировано для реального DFIR, без маркетинговой пены. Обновляй артефакты на текущий релиз Velociraptor при вводе в эксплуатацию.</p>
+</footer>
+
+</main>
+</body>
+</html>
